@@ -1,0 +1,1 @@
+local PA=PlaceAction local CC=ClearCursor for i,s in pairs(SBAR.m) do PickupMacro(s)PA(i)CC()end for i,s in pairs(SBAR.i) do PickupItem(s)PA(i)CC()end for i,s in pairs(SBAR.s) do C_Spell.PickupSpell(s)PA(i)CC()end

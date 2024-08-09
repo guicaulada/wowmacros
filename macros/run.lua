@@ -1,0 +1,1 @@
+/run local j=C_MountJournal local ids=j.GetMountIDs() while true do local i={j.GetMountInfoByID(ids[random(#ids)])} local e={j.GetMountInfoExtraByID(i[12])} if not i[4] and i[11] and e[5]==230 then j.SummonByID(i[12]) break end end

@@ -34,3 +34,12 @@ local loadoutString = _L("sl", specID, loadoutName)
 ```
 
 In this example, the function returns the `loadoutString` that was saved with the specified keys.
+
+### 4. `lout`
+The `lout` library introduces the `_LO` variable, which is used to retrieve detailed loadout information for your character. This can be particularly useful for macros that need to adapt or respond to your character's current loadout.
+
+#### Available Properties:
+- **`_LO.class`**: Retrieves the class name of the character.
+- **`_LO.spec`**: Retrieves the spec ID of the current specialization.
+- **`_LO.name`**: Retrieves the name of the current loadout.
+- **`_LO.configs`**: Retrieves all configuration IDs associated with the current specialization.

@@ -1,2 +1,3 @@
 #cmd clearloadouts
-local C = C_ClassTalents for _,v in pairs(C.GetConfigIDsBySpecID(PlayerUtil.GetCurrentSpecID())) do C.DeleteConfig(v) end C.SetStarterBuildActive(true)
+#run {|LOUT|}
+for _,v in pairs(_LO.configs) do C.DeleteConfig(v) end C.SetStarterBuildActive(true)

@@ -2,6 +2,8 @@
 
 This directory contains macros that define various commands you can use in World of Warcraft. Each command is designed to perform specific tasks that can enhance your gameplay. Below is a description of each command available in this directory:
 
+**Note:** All command macros are dependent on the `cmds` engine macro and the `run` library to function correctly. Ensure that they are properly set up and available. Execute the `cmds` macro once per session to make the commands available in-game.
+
 ### 1. `/accountbars`
 Sets up action bars with abilities that are the same for all your characters, such as hearthstones, mounts, utilities, and profession abilities. This command helps standardize certain abilities across multiple characters.
 

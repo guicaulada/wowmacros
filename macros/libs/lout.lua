@@ -1,1 +1,1 @@
-local C=C_ClassTalents local p=PlayerUtil.GetCurrentSpecID() local _LO={class=UnitClass("player"),spec=p,name=C_Traits.GetConfigInfo(C.GetLastSelectedSavedConfigID(p)).name,configs=C.GetConfigIDsBySpecID(p)}
+local C=C_ClassTalents local p=PlayerUtil.GetCurrentSpecID() local i=C.GetLastSelectedSavedConfigID(p) local c=i and C_Traits.GetConfigInfo(i) or nil local _LO={class=UnitClass("player"),spec=p,name=c and c.name or nil,configs=C.GetConfigIDsBySpecID(p)}

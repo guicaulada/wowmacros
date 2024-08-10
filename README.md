@@ -29,6 +29,8 @@ The naming conventions provided are recommendations for how the macros should be
 - **Supporting Libraries**: Name these with `||<name>||` to ensure they are listed last.
 - **Other Macros**: Can be named freely, especially if they are simpler macros like "fly" or "run".
 
+**Note:** Macros that do not follow these naming conventions may need to be modified to work correctly within this structure.
+
 ## Engine Macros
 
 Engine macros are underlying macros that need to be called only once every reload or login. They don't take any direct action in-game, such as summoning mounts or casting spells. Instead, they are used to process other macros and perform code generation. Engine macros enable the framework of command creation and other frameworks.
@@ -55,8 +57,8 @@ Macros starting with `#cmd <command>` will be converted into a command by the `c
 
 ```plaintext
 #cmd myCommand
-/run print("This is my custom command!")
 #run macro1 macro2 macro3
+/run print("This is my custom command!")
 ```
 
 In this example:

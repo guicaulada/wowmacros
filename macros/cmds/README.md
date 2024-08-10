@@ -31,3 +31,9 @@ Saves all the character macros to be loaded by other characters of the same clas
 
 ### 10. `/way <x> <y>`
 Creates a waypoint, similar to how TomTom works. Note that the game only allows one waypoint at a time, and you must be on the correct map for the coordinates to work correctly. This command is helpful for navigating to specific locations.
+
+### 11. `/savebars`
+Saves the current action bars for the current loadout, allowing them to be shared with other characters of the same specialization. This is useful for maintaining consistent action bar setups across multiple characters.
+
+### 12. `/loadbars`
+Loads the saved action bars for the current loadout, allowing you to apply the same action bar setup on other characters of the same specialization. This helps ensure that your action bars remain consistent across different characters.

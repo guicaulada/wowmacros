@@ -20,7 +20,7 @@ Loads all the saved loadouts for the current spec. Use this command to quickly a
 ### 6. `/loadmacros`
 Loads all the saved macros for the current class. This allows you to quickly load a set of macros tailored to your class, simplifying setup on new characters or after a reset.
 
-### 7. `/macroimage <macro_name> <icon_name>`
+### 7. `/macroicon <macro_name> <icon_name>`
 Allows you to set the icon for a macro using its name and the icon name from [Wowhead](https://www.wowhead.com/icons). This command makes it easy to customize macro icons for better visual organization.
 
 ### 8. `/saveloadout`

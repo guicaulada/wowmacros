@@ -1,1 +1,1 @@
-local p1,p2=GetProfessions() if p1 and p2 then local n1,n2=GetProfessionInfo(p1),GetProfessionInfo(p2) for k, v in pairs({[161]=n1,[162]=n2}) do SBAR.s[k] = v .. " Journal" C_Spell.PickupSpell(v)PlaceAction(k)ClearCursor() end end
+local p1,p2=GetProfessions() if p1 and p2 then local n1,n2=GetProfessionInfo(p1),GetProfessionInfo(p2) for k, v in pairs({[161]=n1,[162]=n2}) do b.s[k] = v .. " Journal" C_Spell.PickupSpell(v)PlaceAction(k)ClearCursor() end end

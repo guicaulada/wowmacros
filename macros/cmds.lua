@@ -1,1 +1,1 @@
-/run local B=GetMacroBody RunScript(B("{|run|}")) for i=1,120 do local b=B(i) or "" local c,f=strmatch(b, "#cmd%s(%w+)(.+)") if c then RunScript(format('SLASH_%s1="/%s" SlashCmdList[%q]=function(msg) %s end',c,c,c,gsubrun(f))) end end
+/run local B=GetMacroBody RunScript(B("{|run|}")) for i=1,120 do local b=B(i) or "" local c,f=strmatch(b, "#cmd%s(%w+)(.+)") if c then RunScript(format('SLASH_%s1="/%s" SlashCmdList[%q]=function(msg) %s end',c,c,c,gsubrun(f))) end end print("CMDS OK!")

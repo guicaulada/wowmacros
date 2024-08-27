@@ -1,1 +1,1 @@
-local p1,p2=GetProfessions() if p1 and p2 then local n1,n2=GetProfessionInfo(p1),GetProfessionInfo(p2) for k, v in pairs({[161]=n1,[162]=n2}) do b.s[k] = v .. " Journal" C_Spell.PickupSpell(v)PlaceAction(k)ClearCursor() end end
+b.s={[160]=460905,[163]=818,[164]="Cooking",[165]="Fishing",[166]=271990,[167]=80451,[168]=195127,[121]=372608,[122]=372610,[123]=361584,[124]=425782,[125]=403092,[126]=374990}

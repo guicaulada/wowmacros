@@ -1,1 +1,1 @@
-local PA=PlaceAction local CC=ClearCursor for i,s in pairs(b.m) do PickupMacro(s)PA(i)CC()end for i,s in pairs(b.i) do PickupItem(s)PA(i)CC()end for i,s in pairs(b.s) do C_Spell.PickupSpell(s)PA(i)CC()end
+local p1,p2=GetProfessions() if p1 and p2 then local n1,n2=GetProfessionInfo(p1),GetProfessionInfo(p2) for k, v in pairs({[161]=n1,[162]=n2}) do b.s[k] = v .. " Journal" C_Spell.PickupSpell(v)PlaceAction(k)ClearCursor() end end

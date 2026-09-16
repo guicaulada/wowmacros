@@ -39,3 +39,8 @@ Saves the current action bars for the current loadout, allowing them to be share
 
 ### 12. `/loadbars`
 Loads the saved action bars for the current loadout, allowing you to apply the same action bar setup on other characters of the same specialization. This helps ensure that your action bars remain consistent across different characters.
+
+### 13. `/fixres`
+Resets the resolution to the graphics menu's **Default** option (automatic sizing) and applies it immediately. Intended for **Windowed (Fullscreen)** mode, where WoW offers the Default option.
+
+Copy `fixres.lua` into a general macro named `|fixres|`, then execute the `cmds` engine macro to register `/fixres`. Register it again after each login or reload.

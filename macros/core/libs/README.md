@@ -1,4 +1,6 @@
-# Main Libraries
+# Shared Core Libraries
+
+These lowercase-named macros use `inv_misc_punchcards_white`.
 
 This directory contains essential libraries that support various macros within the overall framework. Below is a description of each file included in this directory:
 
@@ -10,12 +12,12 @@ The `run` file enables the usage of the `#run` mechanic. This mechanic allows yo
 ### 2. `save`
 The `save` file provides the `_S(value, keys...)` function, which allows you to save values between sessions and characters using the `Blizzard_Console_SavedVars` variable. This functionality is useful for persisting data, such as configurations or loadouts, across gaming sessions.
 
-To use the `save` functionality, you need to add `#run {|save|}` to your macro before calling the `_S` function.
+To use the `save` functionality, you need to add `#run {[save]}` to your macro before calling the `_S` function.
 
 **Example Usage:**
 
 ```plaintext
-#run {|save|}
+#run {[save]}
 _S(loadoutString, "sl", specID, loadoutName)
 ```
 
@@ -24,12 +26,12 @@ In this example, `loadoutString` is saved under a unique key combination of `"sl
 ### 3. `load`
 The `load` file provides the `_L(keys...)` function, which allows you to load values previously saved in the `Blizzard_Console_SavedVars` variable. This functionality is essential for retrieving persistent data stored by the `_S` function.
 
-To use the `load` functionality, you need to add `#run {|load|}` to your macro before calling the `_L` function.
+To use the `load` functionality, you need to add `#run {[load]}` to your macro before calling the `_L` function.
 
 **Example Usage:**
 
 ```plaintext
-#run {|load|}
+#run {[load]}
 local loadoutString = _L("sl", specID, loadoutName)
 ```
 
@@ -43,3 +45,12 @@ The `lout` library introduces the `_LO` variable, which is used to retrieve deta
 - **`_LO.spec`**: Retrieves the spec ID of the current specialization.
 - **`_LO.name`**: Retrieves the name of the current loadout.
 - **`_LO.configs`**: Retrieves all configuration IDs associated with the current specialization.
+
+### 5. `mount`
+
+Store this as `{[mount]}`. It returns a function that scans the mount collection
+once and returns matching collected mount IDs. `fly` and `run` call it directly
+and choose randomly from the result. The optional second argument excludes the
+active mount for `run`. No global setup or command engine is required.
+
+See the [installation table](../../../INSTALLATION.md) for exact names and dependencies.

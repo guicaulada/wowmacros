@@ -20,27 +20,44 @@ Deletes all quests except campaign quests. This command can help you quickly cle
 Loads all the saved loadouts for the current spec. Use this command to quickly apply previously saved loadouts, ensuring consistency across your characters of the same class and spec.
 
 ### 6. `/loadmacros`
-Loads all the saved macros for the current class. This allows you to quickly load a set of macros tailored to your class, simplifying setup on new characters or after a reset.
+Replaces all character-specific macros with the saved snapshot for the current class, in saved slot order. General macros are untouched. Repeating the command does not create duplicates. A missing snapshot does nothing; an empty snapshot clears character macros. Snapshot shape, body lengths, and capacity are checked before deletion. Run outside combat and restore action bars afterward. If a creation API call fails, restoration stops with a message; it is not transactional.
 
 ### 7. `/macroicon <macro_name> <icon_name>`
-Allows you to set the icon for a macro using its name and the icon name from [Wowhead](https://www.wowhead.com/icons). This command makes it easy to customize macro icons for better visual organization.
+Accepts an existing macro name (including spaces) followed by an icon name or positive numeric file ID. Invalid syntax or an unknown macro prints usage. Run outside combat. Texture names are passed through to the game; their existence is not checked. Allows you to set the icon using an icon name from [Wowhead](https://www.wowhead.com/icons). This command makes it easy to customize macro icons for better visual organization.
 
 ### 8. `/saveloadout`
 Saves the current loadout to be loaded by `/loadloadouts` on other characters of the same class and spec. This command helps you maintain consistency across different characters.
 
 ### 9. `/savemacros`
-Saves all the character macros to be loaded by other characters of the same class. This is useful for sharing a consistent set of macros across multiple characters.
+Replaces the saved class snapshot with the current character macros. Macros removed since the previous save are removed from storage too. An empty character macro list saves an empty snapshot.
 
 ### 10. `/way <x> <y>`
-Creates a waypoint, similar to how TomTom works. Note that the game only allows one waypoint at a time, and you must be on the correct map for the coordinates to work correctly. This command is helpful for navigating to specific locations.
+Accepts coordinates from 0 to 100, separated by spaces or a comma, and validates the current map before setting a waypoint. Invalid input prints usage without changing the waypoint. Creates a waypoint, similar to how TomTom works. Note that the game only allows one waypoint at a time, and you must be on the correct map for the coordinates to work correctly. This command is helpful for navigating to specific locations.
 
 ### 11. `/savebars`
-Saves the current action bars for the current loadout, allowing them to be shared with other characters of the same specialization. This is useful for maintaining consistent action bar setups across multiple characters.
+Saves a complete snapshot of slots 1–240 for the selected saved loadout. Select a named loadout first. Macro actions are stored by name. Later saves replace the snapshot, including slots that became empty. This is useful for maintaining consistent action bar setups across multiple characters.
 
 ### 12. `/loadbars`
-Loads the saved action bars for the current loadout, allowing you to apply the same action bar setup on other characters of the same specialization. This helps ensure that your action bars remain consistent across different characters.
+Restores slots 1–240 for the selected saved loadout, including clearing slots that were empty when saved. Supports spells, macros by name, and items. Unsupported types (such as flyouts, equipment sets, and battle pets) or unavailable actions abort the entire restore during preflight, leaving the existing bars unchanged. Run outside combat. Load macros first and use unique macro names across general and character macros. If an action becomes unavailable after preflight, restoration stops with a message; earlier changes are not rolled back.
 
 ### 13. `/fixres`
 Resets the resolution to the graphics menu's **Default** option (automatic sizing) and applies it immediately. Intended for **Windowed (Fullscreen)** mode, where WoW offers the Default option.
 
-Copy `fixres.lua` into a general macro named `|fixres|`, then execute the `cmds` engine macro to register `/fixres`. Register it again after each login or reload.
+Copy `fixres.lua` into a general macro named `[fixres]`, then execute the `cmds` engine macro to register `/fixres`. Register it again after each login or reload.
+
+See the [installation table](../../INSTALLATION.md) for all required helper macros.
+
+### 14. `/importmacros`
+Opens the multiline import window. Paste the complete [generated bundle](../../generated/macros.txt)
+and click Import outside combat. Existing account macros are updated by exact,
+exact stored name. Duplicate exact matches are rejected; missing macros are
+created. No names are changed or migrated. Icons follow the directory policy
+in `scripts/icons.json`, including updates to existing macros.
+Character macros and unrelated account macros are untouched. Duplicate names,
+malformed/truncated bundles, oversized bodies, or insufficient slots abort before
+any writes. API failures during writing stop the import and leave earlier changes
+in place. Click `{cmds}` afterward to register changed commands.
+
+The [bootstrap guide](../../generated/BOOTSTRAP.md) installs this command and all
+its helpers with one manually created macro. The importer implementation lives
+in `src/importer.lua`; its `IM` helper files are generated.

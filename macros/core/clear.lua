@@ -1,0 +1,1 @@
+/run if InCombatLockdown() then return print("Leave combat first.") end local n=0 for i=GetNumMacros(),1,-1 do local s=GetMacroInfo(i) if s and s:match("^[{|%[]") then DeleteMacro(i)n=n+1 end end print("Cleared",n,"system macros.")

@@ -1,3 +1,3 @@
 #cmd saveloadout
-#run {|SAVE|} {|LOUT|}
+#run {[save]} {[lout]}
 _S(PlayerSpellsFrame.TalentsFrame:GetLoadoutExportString(),"sl",_LO.spec,_LO.name)

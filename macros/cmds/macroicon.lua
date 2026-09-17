@@ -1,2 +1,4 @@
 #cmd macroicon
-local args={strsplit(" ", msg)} EditMacro(args[1],nil,args[2])
+#run [[outofcombat]]
+local n,i=msg:match("^%s*(.-)%s+(%S+)%s*$")
+#run [[macroicon]]

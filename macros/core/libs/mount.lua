@@ -1,0 +1,1 @@
+return function(t,g) local j=C_MountJournal local r={} for _,v in ipairs(j.GetMountIDs()) do local i={j.GetMountInfoByID(v)} if i[11] and not(g and i[4]) and t[select(5,j.GetMountInfoExtraByID(v))] then r[#r+1]=v end end return r end

@@ -1,0 +1,1 @@
+if not x or not y or x<0 or x>100 or y<0 or y>100 then return print("Usage: /way <x> <y> (0-100)") end local m=C_Map.GetBestMapForUnit("player") if not m or not C_Map.CanSetUserWaypointOnMap(m) then return print("No waypoint on this map.") end

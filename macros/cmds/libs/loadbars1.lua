@@ -1,0 +1,1 @@
+local p={spell=C_Spell.PickupSpell,macro=PickupMacro,item=PickupItem} local function pick(i,a) ClearCursor() local f=p[a[1]] if not f then print("Unsupported action at slot",i,a[1]) return end f(a[2]) return GetCursorInfo() end

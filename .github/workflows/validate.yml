@@ -1,0 +1,13 @@
+name: Validate macros
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y luajit
+      - run: python3 scripts/build-importer.py --check
+      - run: luajit tests/validate.lua
+      - run: luajit tests/importer.lua

@@ -1,0 +1,5 @@
+e:SetFontObject(ChatFontNormal) e:SetAutoFocus(false) e:SetMaxLetters(0)
+s:SetScrollChild(e)
+e:SetScript("OnEscapePressed",function() e:ClearFocus() f:Hide() end)
+e:SetScript("OnCursorChanged",function(_,x,y,w,h)
+local v=-y local p=s:GetVerticalScroll()

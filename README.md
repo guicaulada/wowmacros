@@ -1,176 +1,162 @@
-# World of Warcraft Macros Collection
+# World of Warcraft Macros
 
-Welcome to my World of Warcraft macros repository! This project is organized to help manage and utilize various macros efficiently. The macros are organized into different folders based on their function, and naming conventions are used to control their order for easy access and management within the game.
+If replacing an older naming scheme, run its existing uninstall/reset macro before `/reload`
+and reinstalling. The new `~1.uninstall` only removes the new reserved prefixes.
 
-## Project Structure
+An addon-free macro system for Retail WoW, including GeForce Now. Write each command
+or library as one Lua file. The generator compacts the code and splits it into
+stored macros of at most **255 bytes**; the runtime joins the pieces before compiling
+and executing the complete source. Local variables, long lines, and strings can
+span chunk boundaries. Comments and unnecessary whitespace are removed during
+generation; quoted and long-bracket string contents are preserved. Source code can
+use normal formatting and explanatory comments.
 
-```plaintext
-macros/
-├── core/       # {cmds}, {import}, and {clear}
-│   └── libs/   # shared libraries
-├── common/     # fly and run click/shortcut macros
-└── cmds/       # slash commands
-    └── libs/   # command helpers
+## Source layout
+
+```text
+src/
+├── core/   # standalone system entry points: cmds, uninstall
+├── cmds/   # one complete Lua file per slash command, including fly and mount
+└── libs/   # reusable Lua libraries
+scripts/    # compiler, generation, icon configuration, staged checks
+generated/  # catalog, manifest, bootstrap guide/line, installer, and paste bundle
 ```
 
-### Explanation
+Edit `src/`; macro chunks are kept in memory and packed directly into the bundle. There are no hand-maintained helper chunks,
+`#cmd` directives, `#run` lists, or source manifest. Files are discovered automatically.
+Generated files remain committed so they are ready to paste without running tools.
 
-- **macros/**: The main directory containing all macros.
-  - **core/**: System setup and bootstrap macros.
-    - **libs/**: Shared libraries for command expansion, persistence, loadouts, and mounts.
-  - **common/**: Click/shortcut gameplay macros.
-  - **cmds/**: Folder for macros using the `#cmd` mechanic.
-    - **libs/**: Subfolder within `cmds` for additional libraries or files executed by the commands.
-  - All other macros.
+| Generated artifact | Purpose |
+| --- | --- |
+| `install.lua` | Executable chat-bootstrap installer with the full bundle included. |
+| `macros.txt` | Data-only bundle for `/importmacros`; also decoded by tests. |
+| `bootstrap.lua` | Pasteable `/run` chat line, used by the bootstrap guide and tests. |
+| `catalog.lua` | Command/library chunk descriptors for validation; the runtime embeds its own copy in the bundle. |
+| `manifest.lua` | Macro names, source paths, categories, and byte counts for validation. |
+| `BOOTSTRAP.md` | Handwritten installation guide with generated bootstrap and uninstall code blocks. |
 
-### Naming Conventions
+`make generate` creates the Lua/text artifacts and refreshes only the marked
+sections of `BOOTSTRAP.md` and `INSTALLATION.md`. Tests use the catalog and manifest;
+you do not paste either file into the game.
 
-All repository-managed names are lowercase and contain no pipe characters.
-WoW uses pipes for text formatting, so plain braces and square brackets identify
-roles without consuming letters or collapsing delimiters in displayed labels.
 
-- **Core:** `{cmds}`, `{import}`, `{clear}`.
-- **Shared libraries:** `{[run]}`, `{[save]}`, `{[mount]}`.
-- **Commands:** `[way]`, `[accountbars]`.
-- **Command helpers:** `[[accountbars1]]`, `[[im01]]`.
-- **Click/shortcut macros:** `fly`, `run`.
+## Installation
 
-Imports match exact stored names only. There are no casing fixes, renames, or
-legacy-name migrations. Use `{clear}` before reinstalling the system. Existing
-`fly`/`run` casing differences can be handled manually. References to external
-user macros `HS`, `TRNK1`, and `TRNK2` retain their configured names.
+Follow the [bootstrap guide](generated/BOOTSTRAP.md). Paste its `/run` line into WoW
+chat to open the text box, paste the generated installer, and press Enter. Then
+click **Import**. No macro needs to be created manually.
+Then click `~1.cmds` to register commands. Click `~1.cmds` again after every login/reload.
+Run `/cmds` to list all installed system commands on one line, separated by spaces.
+No addon or access to WoW's filesystem is needed.
 
-## Engine Macros
+For this layout change, run `~1.uninstall`, `/reload`, then follow the bootstrap guide
+from scratch. `~1.uninstall` deletes **all account macros starting with `~1.`, `~2.`, or `~3.`**,
+including itself. Other account macros and character macros remain. Remove the old
+standalone `fly` and `run` macros manually; use `/fly` and `/mount` instead.
+Command shortcuts are not generated. To put a command on an action bar, create
+your own macro containing its slash command, such as `/fly`. Choose a name without
+a system prefix (for example, `Fly`) so `~1.uninstall` preserves it.
 
-Engine macros are underlying macros that need to be called only once every reload or login. They don't take any direct action in-game, such as summoning mounts or casting spells. Instead, they are used to process other macros and perform code generation. Engine macros enable the framework of command creation and other frameworks.
+For later body-only updates, `/importmacros` accepts [generated/macros.txt](generated/macros.txt).
+Click **Import**, then `~1.cmds`. If the importer itself changed, `/reload` and click
+`~1.cmds` to discard the old importer window. When sources are added, removed, or
+shrink, use the fresh-reset flow: chunk IDs can shift, and the importer does not
+delete obsolete macros. Imports only update exact names or create new entries;
+there are no renames or migrations.
 
-The `cmds` macro is a prime example of an engine macro. It processes all macros that start with `#cmd <command>` and converts them into usable in-game commands. This macro needs to be called once per session (on reload or login) to ensure the command framework is properly initialized.
+The [installation inventory](INSTALLATION.md) lists every generated macro and its
+source. Names are lowercase and pipe-free. The shared `~` prefix sorts after
+ordinary ASCII names such as `FLY`; numeric groups order core entries (`~1.`),
+library entries (`~2.`), then all code chunks (`~3.`):
 
-### Characteristics
+| Role | Example | Icon |
+| --- | --- | --- |
+| Core entry | `~1.cmds` | Red punchcard |
+| Library first chunk | `~2.mount` | White punchcard |
+| Additional library chunk | `~3.l003.002` | Yellow punchcard |
+| Core/command code chunk | `~3.c006.001` | Yellow punchcard |
 
-- **No Direct Action**: Unlike regular macros, engine macros don't perform in-game actions like summoning mounts.
-- **Once per Session**: They need to be called only once per session, typically during a reload or login.
-- **Framework Enablers**: They are essential for setting up the framework that other macros rely on, including command creation and macro processing.
+Icon settings live in [scripts/icons.json](scripts/icons.json). The importer validates
+the whole bundle, byte lengths, duplicates, capacity, and combat status before writing.
+If a write fails, it stops and reports it; earlier changes remain. Reimporting the
+same bundle skips unchanged entries. The normal hex bundle is data; the initial
+bootstrap executes this repository's generated Lua installer.
 
-## The `#cmd` Mechanic
+See the [command reference](src/cmds/README.md) for the installed commands.
 
-Macros starting with `#cmd <command>` will be converted into a command by the `cmds` macro. This feature allows you to create custom commands that can be invoked directly in the game. 
+## Writing a command
 
-### How It Works
+Create `src/cmds/hello.lua` with ordinary Lua, without `/run`:
 
-- **Command Conversion**: The `cmds` macro processes any macro that begins with `#cmd <command>`, effectively transforming it into a usable in-game command.
-
-- **Code Injection with `#run`**: Command macros that utilize the `#cmd` mechanic can also leverage the `#run <macro_name>` function to inject code from other macros within their scope. You can even run multiple macros in sequence by specifying them in the format `#run macro1 macro2 macro3`. This allows for modular macro creation, where smaller pieces of code can be reused across multiple commands.
-
-### Example
-
-```plaintext
-#cmd mycommand
-#run macro1 macro2 macro3
-print("This is my custom command!")
+```lua
+local text = msg ~= "" and msg or "world"
+print("Hello, " .. text)
 ```
 
-In this example:
+Run `make generate`. This creates only the code chunks needed to register the
+command. After installation and `~1.cmds`, `/hello Gui`
+prints `Hello, Gui`. `msg` is the slash-command argument; `wm` is the shared runtime.
 
-- The `#cmd mycommand` will create a command named `mycommand`.
-- The `#run macro1 macro2 macro3` will inject the contents of `macro1`, `macro2`, and `macro3` into this command's execution, in that order.
+Filenames use lowercase letters, numbers, and underscores, starting with a letter.
+Core and library source names allow up to 13 ASCII characters, because their
+three-character prefixes must fit the 16-byte in-game name limit. Commands use numbered chunk names
+and have no generated shortcut name. Source files can exceed 255 bytes;
+the total generated collection must still fit WoW's 120 account slots. The importer
+also checks remaining room alongside your unrelated account macros.
 
-## How to Use
+## Writing a library
 
-**For GeForce Now or bulk updates:** follow the [one-time importer setup](generated/BOOTSTRAP.md).
-It requires manually creating just one macro, `{import}`, and pasting the generated
-installer once. Click Import to install the collection, then click `{cmds}`.
-Afterward, use `/importmacros` and paste [generated/macros.txt](generated/macros.txt)
-to update existing account macros by name and create missing ones. No addon
-or access to WoW's filesystem is needed. Icons follow [scripts/icons.json](scripts/icons.json): core macros use
-`inv_misc_punchcards_red`, shared libraries in `macros/core/libs` use
-`inv_misc_punchcards_white`, commands use `inv_misc_punchcards_blue`, and command
-helpers use `inv_misc_punchcards_yellow`. Existing macros receive these icons even
-when their bodies are unchanged. Icons in other directories, unrelated account
-macros, and character macros are preserved; new macros without a category icon
-use the question-mark icon.
+A library returns a value, usually a function. For example, `src/libs/greeting.lua`:
 
-The normal `WOWMACROS3` bundle is data, not executable Lua. Macro names, icon names, and
-bodies are hex-encoded, with colon separators, to avoid raw pipes and tabs in the
-text box. The one-time bootstrap executes
-this repository's generated installer to open the importer. The importer checks
-the complete bundle, duplicate names, body sizes, available account slots, and
-combat status before writing. It does not delete macros. If WoW rejects a write
-mid-import, it stops and reports the failure; earlier changes remain. Importing
-the same bundle again skips unchanged macros.
+```lua
+return function(name)
+    return "Hello, " .. name
+end
+```
 
-For manual installation:
+A command uses it with `print(wm.lib("greeting")(msg))`. Libraries receive `wm` too,
+so they can use other libraries. Return values are cached until `~1.cmds` runs again;
+read changing game state inside the returned function. Missing libraries and circular
+loads produce errors. Local variables belong to their source file; return values
+explicitly instead of relying on textual includes.
 
-1. Use the [installation table](INSTALLATION.md) to create **general/account macros** with the exact names shown, including case and punctuation.
-2. Copy each file's complete contents into its macro. All files fit within **255 bytes, including newlines**. The libraries must also be stored as separate macros.
-3. Install the dependencies listed for each macro you use. `fly` and `run` now require `{[mount]}`; they do not require the command engine.
-4. Click `{cmds}` after login/reload and after editing command macros or their libraries to register the slash commands.
+Core files are standalone Lua programs. Small single-line programs become `/run`
+macros; larger programs get a self-contained loader and generated chunks. They do
+not depend on the command runtime being initialized. `core/cmds.lua` has one compiler
+insertion marker, `-- @catalog`. The chat bootstrap seed remains
+independent of all installed macros.
 
-Command bodies and libraries contain raw Lua, without `/run`. Put each `#run`
-directive on its own line. Multiple directive lines are supported; nested
-directives inside libraries are not. Missing libraries produce a `Missing macro`
-error when the engine is run. Correct the name or install the dependency, then
-run the engine again.
+## Development
 
-`/loadmacros` replaces all 18 character macro slots with the saved class snapshot.
-General macros are untouched. `/loadbars` restores spells, macros, items, and
-empty slots across slots 1–240. It checks the snapshot first and aborts without
-changing bars if an action type is unsupported or an action cannot be picked up.
-Restore macros before restoring bars that reference them. Both restores must run
-outside combat.
-
-## Development and validation
-
-Install Python 3, LuaJIT (or Lua 5.1), and Make. Enable the repository's commit hook
-once per clone:
+Install Python 3, LuaJIT (or Lua 5.1), and Make:
 
 ```sh
-make install-hooks
+make install-hooks   # once per clone
+make generate        # after editing sources or icons
+make check           # freshness, byte limits, syntax, runtime/importer regressions
+make test-tooling    # compiler boundaries, generation, and staged-hook regressions
 ```
 
-Edit macros, `src/importer.lua`, `scripts/manifest.lua`, or `scripts/icons.json`, then:
+Use `make LUA=lua PYTHON=python3 check test-tooling` to override executables.
+`make generate` updates the catalog/manifest, paste bundles, and sections
+between `<!-- BEGIN GENERATED: name -->` and `<!-- END GENERATED: name -->` in the
+documentation. Surrounding prose is preserved. Missing or malformed markers fail
+before artifacts are written. Tests decode `generated/macros.txt` directly, so
+individual chunk files are never created, even temporarily.
 
-```sh
-make generate
-make check
-```
+The pre-commit hook checks **the staged snapshot**, without rewriting or staging files.
+If outputs are stale, run `make generate`, review and stage the matching changes, then
+retry. Enable it in each clone with `make install-hooks`; CI runs `make check test-tooling`.
 
-`make generate` refreshes importer fragments, paste bundles, and the generated
-sections in `INSTALLATION.md` and `generated/BOOTSTRAP.md`. Only text between
-`<!-- BEGIN GENERATED: name -->` and `<!-- END GENERATED: name -->` is replaced;
-edit surrounding prose directly. Missing, duplicate, or reversed markers fail
-rather than overwriting the document. Edit `src/importer.lua` instead of its
-numbered helper fragments.
+`/loadmacros` replaces character macros with the saved class snapshot. `/loadbars`
+restores spells, macros, items, and empty slots across slots 1–240 after a preflight.
+Restore macros before bars that reference them. Both restores require being out of
+combat. External macro references `HS`, `TRNK1`, and `TRNK2` keep their configured names.
 
-`make check` verifies generated output is current, every macro fits within 255
-bytes, dependencies resolve, commands compile, and the Lua regression tests pass.
-It does not rewrite files. `make test-tooling` exercises documentation preservation,
-generator repeatability, and partial-staging behavior. CI runs both targets.
-For Lua 5.1 or a different Python executable, use `make LUA=lua PYTHON=python3 check`.
-
-The pre-commit hook exports **the staged snapshot** to a temporary directory and
-runs `make check` there. This catches stale bundles or documentation in the commit,
-even if the working tree already has newer output. The hook never rewrites or
-stages files: on failure, run `make generate`, review and stage the matching changes,
-then retry the commit. This keeps partially staged edits under your control.
-`make install-hooks` sets this clone's local `core.hooksPath` to `.githooks`; hooks
-are not enabled automatically in new clones. CI provides the same validation for
-commits made without the local hook.
-
-For a fresh in-game installation, run `{clear}`, `/reload`, manually recreate
-`{import}`, and paste the current [install.lua](generated/install.lua). Click Import
-and then `{cmds}`. Existing `fly` and `run` casing can be handled manually.
-
-This project targets Retail WoW. The version-2 import flow has been reported
-working in-game; version-3 icon updates still need in-game verification. The tests use mocked WoW APIs and do not prove protected-action,
-combat, talent UI, or persistence behavior in a live client. Before relying on
-restores, save a backup and check them on a test character; record the client
-build from `GetBuildInfo()` when reporting results.
-
-## Contributions
-
-Feel free to contribute by submitting pull requests. Whether it's new macros, improvements to existing ones, or bug fixes, all contributions are welcome!
+The importer previously worked in-game; this generic compiler/runtime has been tested
+with mocked WoW APIs and still needs an in-game check. Tests cannot establish live
+protected-action or persistence behavior.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+[MIT](LICENSE).

@@ -1,30 +1,46 @@
 -- Run from the repository root with Lua 5.1 or LuaJIT.
-local manifest = dofile("scripts/manifest.lua")
+local manifest = dofile("generated/manifest.lua")
 local function read(path)
   local f = assert(io.open(path, "rb"))
   local body = f:read("*a")
   f:close()
   return body
 end
-local bodies, paths, commands, storedBodies = {}, {}, {}, {}
-local function stored(name) return name end
+local bodies = dofile("tests/read-bundle.lua")
+local storedBodies, seen = {}, {}
 local largest, largestPath = 0, ""
 for _, entry in ipairs(manifest) do
-  local name, path = unpack(entry)
+  local name, source, category, size = unpack(entry)
   assert(not name:find("|",1,true), "Pipe in macro name: " .. name)
   assert(name==name:lower(), "Macro names must be lowercase: " .. name)
-  assert(not bodies[name], "Duplicate macro name: " .. name)
-  assert(not paths[path], "Duplicate macro path: " .. path)
-  local body = read(path)
-  -- Count bytes, including every newline: conservative for non-ASCII text too.
-  assert(#body <= 255, path .. " exceeds 255 bytes: " .. #body)
+  assert(not seen[name], "Duplicate macro name: " .. name)
+  local body = assert(bodies[name], "Missing bundle entry: " .. name)
+  assert(#body == size and #body <= 255, name .. " has invalid byte count: " .. #body)
   assert(#name <= 16, "Macro name exceeds 16 bytes: " .. name)
-  if #body > largest then largest, largestPath = #body, path end
-  bodies[name], paths[path], storedBodies[stored(name)] = body, true, body
+  if #body > largest then largest, largestPath = #body, name end
+  seen[name], storedBodies[name] = true, body
 end
-local listing = assert(io.popen("find macros -type f -name '*.lua'"))
-for path in listing:lines() do assert(paths[path], "Missing manifest entry: " .. path) end
-listing:close()
+for name in pairs(bodies) do assert(seen[name], "Missing manifest entry: " .. name) end
+
+-- Validate every reassembled source, including libraries not invoked by a test.
+local parts = {}
+for _, entry in ipairs(manifest) do
+  if entry[3] == "chunks" or entry[3] == "libs" then
+    local source = entry[2]
+    parts[source] = parts[source] or {}
+    table.insert(parts[source], bodies[entry[1]])
+  elseif entry[3] == "core" then
+    assert(loadstring(bodies[entry[1]]:sub(6), entry[1]))
+  end
+end
+for source, chunks in pairs(parts) do
+  local code = table.concat(chunks)
+  if not source:match("^src/core/") then
+    code = "return function(msg,wm) " .. code .. " end"
+  end
+  assert(loadstring(code, source))
+end
+assert(#read("generated/bootstrap.lua") <= 255)
 
 local function environment()
   local env = setmetatable({}, {__index = _G})
@@ -48,26 +64,17 @@ local function compile(body, env, name)
   local fn = assert(loadstring(body, name))
   return setfenv(fn, env)
 end
-local env = environment()
-compile(bodies["{[run]}"], env)()
-for name, body in pairs(bodies) do
-  local command, code = body:match("^#cmd%s+(%w+)(.*)")
-  if command then
-    assert(not commands[command], "Duplicate command: " .. command)
-    commands[command] = "return function(msg) " .. env.gsubrun(code) .. " end"
-    compile(commands[command], env, name)
-  elseif body:match("^/run ") then
-    compile(body:sub(6), env, name)
-  elseif not name:match("^%[%[") then
-    compile(body, env, name)
-  end
-  -- Literal dependencies used by standalone macros and the engine.
-  for dependency in body:gmatch('GetMacroBody%("([^"]+)"%)') do
-    assert(storedBodies[dependency], "Missing dependency: " .. dependency)
-  end
+local catalog = dofile("generated/catalog.lua")
+local commands = catalog.cmds
+local function install(env)
+  env.SlashCmdList = {}
+  env.loadstring = function(code) return compile(code, env) end
+  compile(bodies["~1.cmds"]:sub(6), env)()
+  env.messages = {}
 end
 local function command(name, env, msg)
-  return compile(assert(commands[name]), env, name)()(msg or "")
+  if not env.WoWMacros then install(env) end
+  return assert(env.SlashCmdList["WOWMACROS_" .. name])(msg or "")
 end
 local tests = 0
 local function test(name, fn)
@@ -77,34 +84,76 @@ local function test(name, fn)
   print("PASS " .. name)
 end
 
-test("line-scoped includes, multiple libraries and missing dependency diagnostics", function()
-  local e = environment()
-  e.GetMacroBody = function(k) return ({a = "local a=2", b = "local b=3"})[k] end
-  compile(bodies["{[run]}"], e)()
-  assert(compile(e.gsubrun("#run a\n#run b\nreturn a+b"), e)() == 5)
-  assert(compile(e.gsubrun("#run a b\nreturn a+b"), e)() == 5)
-  assert(compile(e.gsubrun("#run a\r\n#run b\r\nreturn a+b"), e)() == 5)
-  local ok, err = pcall(e.gsubrun, "#run missing")
-  assert(not ok and err:find("Missing macro: missing", 1, true))
-  assert(e.gsubrun('print("#run missing")'):find('print("#run missing")', 1, true))
+test("user macros sort before core, library entries, and chunks", function()
+  local ordered = {{"FLY", 0}, {"mount", 0}, {"Zebra", 0}}
+  local groups = {core = 1, libs = 2, chunks = 3}
+  for _, entry in ipairs(manifest) do
+    ordered[#ordered + 1] = {entry[1], assert(groups[entry[3]])}
+  end
+  table.sort(ordered, function(a, b) return a[1]:lower() < b[1]:lower() end)
+  local previous = 0
+  for _, entry in ipairs(ordered) do
+    assert(entry[2] >= previous, "Unexpected category ordering: " .. entry[1])
+    previous = entry[2]
+  end
 end)
 
-test("actual engine registers every command", function()
+test("missing chunks fail before command registration", function()
   local e = environment()
-  e.SlashCmdList = {}
-  e.GetMacroBody = function(k)
-    return type(k) == "number" and manifest[k] and bodies[manifest[k][1]] or storedBodies[k]
+  e.GetMacroBody = function(name)
+    if name:match("^~3%.c") then return nil end
+    return storedBodies[name]
   end
-  e.RunScript = function(code) return compile(code, e)() end
-  compile(bodies["{cmds}"]:sub(6), e)()
+  local ok, err = pcall(install, e)
+  assert(not ok and err:find("Missing macro:", 1, true))
+  assert(next(e.SlashCmdList) == nil)
+end)
+
+test("actual engine registers every command and caches libraries", function()
+  local e = environment()
+  install(e)
   for name in pairs(commands) do
-    assert(type(e.SlashCmdList[name]) == "function", name)
-    assert(e["SLASH_" .. name .. "1"] == "/" .. name)
+    assert(type(e.SlashCmdList["WOWMACROS_" .. name]) == "function", name)
+    assert(e["SLASH_WOWMACROS_" .. name .. "1"] == "/" .. name)
+    assert(bodies["[" .. name .. "]"] == nil, "Unexpected clickable command entry")
   end
+  assert(e.WoWMacros.lib("load") == e.WoWMacros.lib("load"))
+  local ok, err = pcall(e.WoWMacros.lib, "missing")
+  assert(not ok and err:find("Unknown library: missing", 1, true))
+end)
+
+test("cmds lists all installed system commands once, sorted and space-separated", function()
+  local e = environment()
+  install(e)
+  e.SlashCmdList.UNRELATED = function() end
+  e.SLASH_UNRELATED1 = "/unrelated"
+  command("cmds", e)
+  local expected = {}
+  for name in pairs(commands) do expected[#expected + 1] = "/" .. name end
+  table.sort(expected)
+  assert(#e.messages == 1 and #e.messages[1] == 1)
+  assert(e.messages[1][1] == table.concat(expected, " "))
+  assert(e.messages[1][1]:find("/cmds ", 1, true))
+  install(e)
+  command("cmds", e)
+  assert(#e.messages == 1 and e.messages[1][1] == table.concat(expected, " "))
+end)
+
+test("library failures do not poison the cache", function()
+  local e = environment()
+  install(e)
+  e.GetMacroBody = function(name)
+    if name == "~2.load" then return 'return wm.lib("load")' end
+    return storedBodies[name]
+  end
+  local ok, err = pcall(e.WoWMacros.lib, "load")
+  assert(not ok and err:find("Circular library: load", 1, true))
+  e.GetMacroBody = function(name) return storedBodies[name] end
+  assert(type(e.WoWMacros.lib("load")) == "function")
 end)
 
 test("mount selection terminates, preserves type filters and handles empty collections", function()
-  for _, name in ipairs({"run", "fly"}) do
+  for _, name in ipairs({"mount", "fly"}) do
     local e, collection, summoned = environment(), {}, nil
     e.random = function(n) assert(n > 0); return n end
     e.C_MountJournal = {
@@ -118,7 +167,8 @@ test("mount selection terminates, preserves type filters and handles empty colle
     }
     -- loadstring in WoW uses the shared global environment.
     e.loadstring = function(s) return compile(s, e) end
-    local run = compile(bodies[name]:sub(6), e)
+    install(e)
+    local run = function() command(name, e) end
     local function boundedRun()
       debug.sethook(function() error("Unbounded mount selection") end, "", 10000)
       local ok, err = pcall(run)
@@ -133,8 +183,8 @@ test("mount selection terminates, preserves type filters and handles empty colle
     collection = {{kind = 230, collected = true}, {kind = 424, collected = true},
                   {kind = 248, collected = true}, {kind = 402, collected = true}}
     boundedRun()
-    assert(summoned == (name == "run" and 1 or 4))
-    if name == "run" then
+    assert(summoned == (name == "mount" and 1 or 4))
+    if name == "mount" then
       summoned, collection[1].active = nil, true
       boundedRun()
       assert(not summoned)

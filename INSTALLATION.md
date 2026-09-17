@@ -1,96 +1,110 @@
 # Installation
 
-For GeForce Now and bulk updates, follow the [bootstrap guide](generated/BOOTSTRAP.md).
-To reset first, manually create `{clear}` from [clear.lua](macros/core/clear.lua)
-and run it outside combat. It deletes all general macros beginning with `{`, `[`, or `|`,
-including itself. Other general macros and all character macros are preserved.
-Run `/reload`, then create `{import}` from [import.lua](macros/core/import.lua).
-Click it, paste [install.lua](generated/install.lua), press Enter, and click Import.
-Then click `{cmds}`. Later updates use `/importmacros` with [macros.txt](generated/macros.txt).
+If replacing an older naming scheme, run its existing uninstall/reset macro before `/reload`
+and reinstalling. The new `~1.uninstall` only removes the new reserved prefixes.
 
-All entries are general/account macros. Names use lowercase, braces, and square brackets. Imports match exact names only.
-Commands also require `{cmds}` and `{[run]}`. The table lists direct dependencies.
-Core names use `{name}`, shared libraries `{[name]}`, commands `[name]`,
-and command helpers `[[name]]`. No names contain pipes. No renames or migrations are performed.
-Byte counts include all newlines. Do not add `/run` to raw Lua libraries or command bodies.
+For GeForce Now and bulk installation, follow the [bootstrap guide](generated/BOOTSTRAP.md).
+For this source-layout change, first run `~1.uninstall` outside combat
+(or use the uninstall chat line in the bootstrap guide). It deletes all account
+macros beginning with `~1.`, `~2.`, or `~3.`, including itself. Other account macros and
+all character macros are preserved. Run `/reload`, then paste the line from
+[bootstrap.lua](generated/bootstrap.lua) into WoW chat and press Enter. Paste
+[install.lua](generated/install.lua) into the box it opens, press Enter, click Import,
+and then click `~1.cmds`. No import macro needs to be created first.
+
+All entries below are account macros delivered by the paste bundle. The table
+links their source files for editing; never paste uncompiled sources into WoW.
+The runtime concatenates chunks without separators before compiling each source.
+Click `~1.cmds` after each login/reload to register slash commands. Core entry points can run before `~1.cmds`.
+
+Imports match exact names only. No renames or migrations are performed. Remove old
+standalone `fly`/`run` manually; use `/fly` and `/mount` instead.
+Create optional action-bar shortcuts manually, using names without a system prefix.
+For body-only updates, `/importmacros` accepts [macros.txt](generated/macros.txt).
+Reset and reinstall when sources are added/removed or chunks become obsolete.
 
 <!-- BEGIN GENERATED: icons -->
-| Directory | Managed icon |
+| Generated category | Managed icon |
 | --- | --- |
-| `macros/core/` | `inv_misc_punchcards_red` |
-| `macros/core/libs/` | `inv_misc_punchcards_white` |
-| `macros/cmds/` | `inv_misc_punchcards_blue` |
-| `macros/cmds/libs/` | `inv_misc_punchcards_yellow` |
+| `core` | `inv_misc_punchcards_red` |
+| `libs` | `inv_misc_punchcards_white` |
+| `chunks` | `inv_misc_punchcards_yellow` |
 <!-- END GENERATED: icons -->
 
-The most specific directory wins. Existing icons in other directories are preserved;
-new macros in those directories use the question-mark icon. Imports update managed icons
-even when macro bodies have not changed. No macros are deleted by the importer.
+Icons follow the generated category in [scripts/icons.json](scripts/icons.json).
+Imports update managed icons even when bodies have not changed. The importer
+never deletes macros; the generator rebuilds the bundle from current sources.
 
 <!-- BEGIN GENERATED: inventory -->
-| In-game name | File | Bytes | Direct dependencies, in order |
-| --- | --- | ---: | --- |
-| `{clear}` | [macros/core/clear.lua](macros/core/clear.lua) | 232 | — |
-| `{cmds}` | [macros/core/cmds.lua](macros/core/cmds.lua) | 252 | `{[run]}` |
-| `fly` | [macros/common/fly.lua](macros/common/fly.lua) | 216 | `{[mount]}` |
-| `run` | [macros/common/run.lua](macros/common/run.lua) | 199 | `{[mount]}` |
-| `{[run]}` | [macros/core/libs/run.lua](macros/core/libs/run.lua) | 180 | — |
-| `{[mount]}` | [macros/core/libs/mount.lua](macros/core/libs/mount.lua) | 234 | — |
-| `{[save]}` | [macros/core/libs/save.lua](macros/core/libs/save.lua) | 182 | — |
-| `{[load]}` | [macros/core/libs/load.lua](macros/core/libs/load.lua) | 172 | — |
-| `{[lout]}` | [macros/core/libs/lout.lua](macros/core/libs/lout.lua) | 254 | — |
-| `[accountbars]` | [macros/cmds/accountbars.lua](macros/cmds/accountbars.lua) | 90 | `[[accountbars1]]`, `[[accountbars2]]`, `[[accountbars3]]`, `[[accountbars4]]` |
-| `[clearloadouts]` | [macros/cmds/clearloadouts.lua](macros/cmds/clearloadouts.lua) | 118 | `{[lout]}` |
-| `[clearmacros]` | [macros/cmds/clearmacros.lua](macros/cmds/clearmacros.lua) | 56 | — |
-| `[clearquests]` | [macros/cmds/clearquests.lua](macros/cmds/clearquests.lua) | 200 | — |
-| `[fixres]` | [macros/cmds/fixres.lua](macros/cmds/fixres.lua) | 65 | — |
-| `[loadbars]` | [macros/cmds/loadbars.lua](macros/cmds/loadbars.lua) | 214 | `{[load]}`, `{[lout]}`, `[[outofcombat]]`, `[[loadbars1]]`, `[[loadbars2]]`, `[[loadbars3]]` |
-| `[loadloadouts]` | [macros/cmds/loadloadouts.lua](macros/cmds/loadloadouts.lua) | 160 | `{[load]}`, `{[lout]}` |
-| `[loadmacros]` | [macros/cmds/loadmacros.lua](macros/cmds/loadmacros.lua) | 185 | `{[load]}`, `{[lout]}`, `[[outofcombat]]`, `[[loadmacros1]]`, `[[macrocheck]]`, `[[loadmacros2]]` |
-| `[macroicon]` | [macros/cmds/macroicon.lua](macros/cmds/macroicon.lua) | 99 | `[[outofcombat]]`, `[[macroicon]]` |
-| `[savebars]` | [macros/cmds/savebars.lua](macros/cmds/savebars.lua) | 126 | `{[save]}`, `{[lout]}`, `[[savebars]]` |
-| `[saveloadout]` | [macros/cmds/saveloadout.lua](macros/cmds/saveloadout.lua) | 123 | `{[save]}`, `{[lout]}` |
-| `[savemacros]` | [macros/cmds/savemacros.lua](macros/cmds/savemacros.lua) | 195 | `{[save]}`, `{[lout]}` |
-| `[way]` | [macros/cmds/way.lua](macros/cmds/way.lua) | 116 | `[[way1]]`, `[[way2]]` |
-| `[[accountbars1]]` | [macros/cmds/libs/accountbars1.lua](macros/cmds/libs/accountbars1.lua) | 106 | — |
-| `[[accountbars2]]` | [macros/cmds/libs/accountbars2.lua](macros/cmds/libs/accountbars2.lua) | 176 | — |
-| `[[accountbars3]]` | [macros/cmds/libs/accountbars3.lua](macros/cmds/libs/accountbars3.lua) | 227 | — |
-| `[[accountbars4]]` | [macros/cmds/libs/accountbars4.lua](macros/cmds/libs/accountbars4.lua) | 205 | — |
-| `[[outofcombat]]` | [macros/cmds/libs/outofcombat.lua](macros/cmds/libs/outofcombat.lua) | 70 | — |
-| `[[savebars]]` | [macros/cmds/libs/savebars.lua](macros/cmds/libs/savebars.lua) | 158 | — |
-| `[[loadbars1]]` | [macros/cmds/libs/loadbars1.lua](macros/cmds/libs/loadbars1.lua) | 228 | — |
-| `[[loadbars2]]` | [macros/cmds/libs/loadbars2.lua](macros/cmds/libs/loadbars2.lua) | 136 | — |
-| `[[loadbars3]]` | [macros/cmds/libs/loadbars3.lua](macros/cmds/libs/loadbars3.lua) | 192 | — |
-| `[[loadmacros1]]` | [macros/cmds/libs/loadmacros1.lua](macros/cmds/libs/loadmacros1.lua) | 209 | — |
-| `[[macrocheck]]` | [macros/cmds/libs/macrocheck.lua](macros/cmds/libs/macrocheck.lua) | 227 | — |
-| `[[loadmacros2]]` | [macros/cmds/libs/loadmacros2.lua](macros/cmds/libs/loadmacros2.lua) | 174 | — |
-| `[[way1]]` | [macros/cmds/libs/way1.lua](macros/cmds/libs/way1.lua) | 244 | — |
-| `[[way2]]` | [macros/cmds/libs/way2.lua](macros/cmds/libs/way2.lua) | 84 | — |
-| `[[macroicon]]` | [macros/cmds/libs/macroicon.lua](macros/cmds/libs/macroicon.lua) | 194 | — |
-| `{import}` | [macros/core/import.lua](macros/core/import.lua) | 242 | — |
-| `[importmacros]` | [macros/cmds/importmacros.lua](macros/cmds/importmacros.lua) | 194 | `[[im01]]`, `[[im02]]`, `[[im03]]`, `[[im04]]`, `[[im05]]`, `[[im06]]`, `[[im07]]`, `[[im08]]`, `[[im09]]`, `[[im10]]`, `[[im11]]`, `[[im12]]`, `[[im13]]`, `[[im14]]`, `[[im15]]`, `[[im16]]`, `[[im17]]`, `[[im18]]`, `[[im19]]` |
-| `[[im01]]` | [macros/cmds/libs/im01.lua](macros/cmds/libs/im01.lua) | 224 | — |
-| `[[im02]]` | [macros/cmds/libs/im02.lua](macros/cmds/libs/im02.lua) | 204 | — |
-| `[[im03]]` | [macros/cmds/libs/im03.lua](macros/cmds/libs/im03.lua) | 233 | — |
-| `[[im04]]` | [macros/cmds/libs/im04.lua](macros/cmds/libs/im04.lua) | 254 | — |
-| `[[im05]]` | [macros/cmds/libs/im05.lua](macros/cmds/libs/im05.lua) | 246 | — |
-| `[[im06]]` | [macros/cmds/libs/im06.lua](macros/cmds/libs/im06.lua) | 238 | — |
-| `[[im07]]` | [macros/cmds/libs/im07.lua](macros/cmds/libs/im07.lua) | 245 | — |
-| `[[im08]]` | [macros/cmds/libs/im08.lua](macros/cmds/libs/im08.lua) | 188 | — |
-| `[[im09]]` | [macros/cmds/libs/im09.lua](macros/cmds/libs/im09.lua) | 195 | — |
-| `[[im10]]` | [macros/cmds/libs/im10.lua](macros/cmds/libs/im10.lua) | 222 | — |
-| `[[im11]]` | [macros/cmds/libs/im11.lua](macros/cmds/libs/im11.lua) | 199 | — |
-| `[[im12]]` | [macros/cmds/libs/im12.lua](macros/cmds/libs/im12.lua) | 240 | — |
-| `[[im13]]` | [macros/cmds/libs/im13.lua](macros/cmds/libs/im13.lua) | 246 | — |
-| `[[im14]]` | [macros/cmds/libs/im14.lua](macros/cmds/libs/im14.lua) | 246 | — |
-| `[[im15]]` | [macros/cmds/libs/im15.lua](macros/cmds/libs/im15.lua) | 226 | — |
-| `[[im16]]` | [macros/cmds/libs/im16.lua](macros/cmds/libs/im16.lua) | 240 | — |
-| `[[im17]]` | [macros/cmds/libs/im17.lua](macros/cmds/libs/im17.lua) | 115 | — |
-| `[[im18]]` | [macros/cmds/libs/im18.lua](macros/cmds/libs/im18.lua) | 239 | — |
-| `[[im19]]` | [macros/cmds/libs/im19.lua](macros/cmds/libs/im19.lua) | 158 | — |
+| In-game name | Bytes | Source |
+| --- | ---: | --- |
+| `~2.load` | 167 | [src/libs/load.lua](src/libs/load.lua) |
+| `~2.lout` | 255 | [src/libs/lout.lua](src/libs/lout.lua) |
+| `~3.l002.002` | 46 | [src/libs/lout.lua](src/libs/lout.lua) |
+| `~2.mount` | 255 | [src/libs/mount.lua](src/libs/mount.lua) |
+| `~3.l003.002` | 184 | [src/libs/mount.lua](src/libs/mount.lua) |
+| `~2.outofcombat` | 106 | [src/libs/outofcombat.lua](src/libs/outofcombat.lua) |
+| `~2.save` | 202 | [src/libs/save.lua](src/libs/save.lua) |
+| `~3.c001.001` | 255 | [src/cmds/accountbars.lua](src/cmds/accountbars.lua) |
+| `~3.c001.002` | 255 | [src/cmds/accountbars.lua](src/cmds/accountbars.lua) |
+| `~3.c001.003` | 255 | [src/cmds/accountbars.lua](src/cmds/accountbars.lua) |
+| `~3.c001.004` | 75 | [src/cmds/accountbars.lua](src/cmds/accountbars.lua) |
+| `~3.c002.001` | 144 | [src/cmds/clearloadouts.lua](src/cmds/clearloadouts.lua) |
+| `~3.c003.001` | 37 | [src/cmds/clearmacros.lua](src/cmds/clearmacros.lua) |
+| `~3.c004.001` | 196 | [src/cmds/clearquests.lua](src/cmds/clearquests.lua) |
+| `~3.c005.001` | 36 | [src/cmds/cmds.lua](src/cmds/cmds.lua) |
+| `~3.c006.001` | 51 | [src/cmds/fixres.lua](src/cmds/fixres.lua) |
+| `~3.c007.001` | 51 | [src/cmds/fly.lua](src/cmds/fly.lua) |
+| `~3.c008.001` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.002` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.003` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.004` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.005` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.006` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.007` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.008` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.009` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.010` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.011` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.012` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.013` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.014` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.015` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.016` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.017` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.018` | 255 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c008.019` | 147 | [src/cmds/importmacros.lua](src/cmds/importmacros.lua) |
+| `~3.c009.001` | 255 | [src/cmds/loadbars.lua](src/cmds/loadbars.lua) |
+| `~3.c009.002` | 255 | [src/cmds/loadbars.lua](src/cmds/loadbars.lua) |
+| `~3.c009.003` | 255 | [src/cmds/loadbars.lua](src/cmds/loadbars.lua) |
+| `~3.c009.004` | 115 | [src/cmds/loadbars.lua](src/cmds/loadbars.lua) |
+| `~3.c010.001` | 183 | [src/cmds/loadloadouts.lua](src/cmds/loadloadouts.lua) |
+| `~3.c011.001` | 255 | [src/cmds/loadmacros.lua](src/cmds/loadmacros.lua) |
+| `~3.c011.002` | 255 | [src/cmds/loadmacros.lua](src/cmds/loadmacros.lua) |
+| `~3.c011.003` | 255 | [src/cmds/loadmacros.lua](src/cmds/loadmacros.lua) |
+| `~3.c011.004` | 126 | [src/cmds/loadmacros.lua](src/cmds/loadmacros.lua) |
+| `~3.c012.001` | 255 | [src/cmds/macroicon.lua](src/cmds/macroicon.lua) |
+| `~3.c012.002` | 50 | [src/cmds/macroicon.lua](src/cmds/macroicon.lua) |
+| `~3.c013.001` | 34 | [src/cmds/mount.lua](src/cmds/mount.lua) |
+| `~3.c014.001` | 255 | [src/cmds/savebars.lua](src/cmds/savebars.lua) |
+| `~3.c014.002` | 67 | [src/cmds/savebars.lua](src/cmds/savebars.lua) |
+| `~3.c015.001` | 132 | [src/cmds/saveloadout.lua](src/cmds/saveloadout.lua) |
+| `~3.c016.001` | 244 | [src/cmds/savemacros.lua](src/cmds/savemacros.lua) |
+| `~3.c017.001` | 255 | [src/cmds/way.lua](src/cmds/way.lua) |
+| `~3.c017.002` | 158 | [src/cmds/way.lua](src/cmds/way.lua) |
+| `~3.k001.001` | 255 | [src/core/cmds.lua](src/core/cmds.lua) |
+| `~3.k001.002` | 255 | [src/core/cmds.lua](src/core/cmds.lua) |
+| `~3.k001.003` | 255 | [src/core/cmds.lua](src/core/cmds.lua) |
+| `~3.k001.004` | 255 | [src/core/cmds.lua](src/core/cmds.lua) |
+| `~3.k001.005` | 255 | [src/core/cmds.lua](src/core/cmds.lua) |
+| `~3.k001.006` | 255 | [src/core/cmds.lua](src/core/cmds.lua) |
+| `~3.k001.007` | 255 | [src/core/cmds.lua](src/core/cmds.lua) |
+| `~3.k001.008` | 40 | [src/core/cmds.lua](src/core/cmds.lua) |
+| `~1.cmds` | 143 | [src/core/cmds.lua](src/core/cmds.lua) |
+| `~1.uninstall` | 251 | [src/core/uninstall.lua](src/core/uninstall.lua) |
 
-All 58 files fit within 255 bytes; the largest is 254 bytes.
+64/120 account slots; 24 source files. Every stored macro fits within 255 bytes (largest: 255).
 <!-- END GENERATED: inventory -->
 
-The importer targets Retail WoW. Its version-2 bootstrap and import flow were
-reported working in-game; version-3 icon updates still need in-game verification.
+The importer targets Retail WoW. The generic compiler/runtime passes mocked API
+tests; the current generated bundle still needs an in-game check.

@@ -1,1 +1,0 @@
-local k={} for i,m in pairs(l) do if type(i)~="number" or type(m)~="table" then return print("Invalid macro snapshot.") end k[#k+1]=i end table.sort(k) if #k>18 then return print("Too many saved macros.") end

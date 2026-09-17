@@ -1,1 +1,0 @@
-for _,i in ipairs(k) do local m=l[i] if type(m[1])~="string" or #m[1]<1 or #m[1]>16 or type(m[3])~="string" or #m[3]>255 or not(type(m[2])=="string" or type(m[2])=="number") then return print("Invalid macro snapshot.") end end

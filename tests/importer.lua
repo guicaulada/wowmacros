@@ -1,12 +1,12 @@
--- Exercise the generated importer and the actual one-macro bootstrap using WoW mocks.
+-- Exercise the generated importer and the chat bootstrap using WoW mocks.
 local function read(path)
   local f=assert(io.open(path,"rb")) local s=f:read("*a") f:close() return s
 end
-local manifest=dofile("scripts/manifest.lua")
-local bodies,storedBodies={},{}
-local function stored(name) return name end
+local manifest=dofile("generated/manifest.lua")
+local bodies=dofile("tests/read-bundle.lua")
+local storedBodies={}
 for _,entry in ipairs(manifest) do
-  bodies[entry[1]]=read(entry[2]) storedBodies[stored(entry[1])]=bodies[entry[1]]
+  storedBodies[entry[1]]=assert(bodies[entry[1]])
 end
 local function compile(code,env)
   return setfenv(assert(loadstring(code)),env)
@@ -82,9 +82,9 @@ local function environment(initial,capacity)
   return e
 end
 local function open(e)
-  compile(bodies["{[run]}"],e)()
-  local code=bodies["[importmacros]"]:match("^#cmd%s+%w+(.*)")
-  compile("return function() "..e.gsubrun(code).." end",e)()()
+  e.SlashCmdList={}
+  compile(bodies["~1.cmds"]:sub(6),e)()
+  e.SlashCmdList.WOWMACROS_importmacros("")
 end
 local function click(e,text)
   e.WoWMacrosImport.Input:SetText(text)
@@ -94,7 +94,7 @@ local function click(e,text)
   error("No import button")
 end
 local function get(e,name)
-  for _,m in ipairs(e.accounts) do if m[1]==stored(name) then return m end end
+  for _,m in ipairs(e.accounts) do if m[1]==name then return m end end
 end
 local count=0
 local function test(name,fn)
@@ -128,17 +128,23 @@ test("full generated bundle round-trips all macro bodies without executing them"
   assert(e.executed==nil and get(e,"DataOnly"))
 end)
 
-test("one-macro bootstrap opens importer with the full bundle ready; only click writes",function()
+test("chat bootstrap starts with no macros; only clicking Import writes",function()
   local e=environment()
-  compile(bodies["{import}"]:sub(6),e)()
+  -- There are no installed chunks yet. Read only what the importer creates.
+  e.GetMacroBody=function(name) local macro=get(e,name) return macro and macro[3] end
+  compile(read("generated/bootstrap.lua"):sub(6),e)()
   local bootstrap=e.frames[1]
   assert(bootstrap.multiline and bootstrap.maxLetters==0)
   bootstrap:SetText(read("generated/install.lua"))
   bootstrap.scripts.OnEnterPressed(bootstrap)
-  assert(e.writes==0 and bootstrap.shown==false)
+  assert(e.writes==0 and #e.accounts==0 and bootstrap.shown==false)
   assert(e.WoWMacrosImport.Input:GetText()==read("generated/macros.txt"))
   click(e,e.WoWMacrosImport.Input:GetText())
   assert(e.writes==#manifest)
+  e.SlashCmdList={}
+  compile(get(e,"~1.cmds")[3]:sub(6),e)()
+  assert(type(e.SlashCmdList.WOWMACROS_fly)=="function")
+  assert(type(e.SlashCmdList.WOWMACROS_mount)=="function")
 end)
 
 test("paste transport avoids pipe escapes and tab conversion",function()
@@ -209,23 +215,20 @@ test("CRLF, Unicode and an exact 255-byte body survive data decoding",function()
 end)
 
 test("category icons are applied on creation and icon-only updates, then skipped",function()
-  local e=environment({{"{cmds}",42,bodies["{cmds}"]},{"fly",88,bodies.fly}})
+  local e=environment({{"~1.cmds",42,bodies["~1.cmds"]},{"fly",88,"/fly"}})
   open(e) click(e,read("generated/macros.txt"))
   for _,entry in ipairs(manifest) do
-    local name,path=unpack(entry) local icon=get(e,name)[2]
-    if path:match("^macros/core/libs/") then assert(icon==104,name)
-    elseif path:match("^macros/core/") then assert(icon==101,name)
-    elseif path:match("^macros/cmds/libs/") then assert(icon==102,name)
-    elseif path:match("^macros/cmds/") then assert(icon==103,name) end
+    local name=entry[1] local icon=get(e,name)[2]
+    assert(icon==({core=101,libs=104,chunks=102})[entry[3]],name)
   end
   assert(get(e,"fly")[2]==88)
   local writes=e.writes click(e,read("generated/macros.txt")) assert(e.writes==writes)
 end)
 
-test("standalone clear removes all prefixed account macros, including itself, and permits fresh bootstrap",function()
-  local e=environment({{"{clear}",1,bodies["{clear}"]},{"{cmds}",1,"old"},
-    {"{un|}",1,"bad name"},{"|command|",1,"old"},{"||helper||",1,"old"},{"[cmd]",1,"old"},{"[[helper]]",1,"old"},
-    {"{|shared|}",1,"old"},{"fly",88,bodies.fly},{"run",89,bodies.run},{"Other",42,"keep"}})
+test("standalone uninstall removes all prefixed account macros, including itself, and permits fresh bootstrap",function()
+  local e=environment({{"~1.uninstall",1,bodies["~1.uninstall"]},{"~1.cmds",1,"old"},
+    {"~1.example",1,"old"},{"~2.load",1,"old"},{"~2.save",1,"old"},{"~3.c001.001",1,"old"},{"~3.k001.001",1,"old"},
+    {"~3.l001.002",1,"old"},{"fly",88,"/fly"},{"run",89,"/mount"},{"Other",42,"keep"}})
   local info=e.GetMacroInfo
   e.GetMacroInfo=function(i) if i==121 then return "{Character}",77,"keep" end return info(i) end
   local deleted=0
@@ -233,23 +236,22 @@ test("standalone clear removes all prefixed account macros, including itself, an
     assert(i>=1 and i<=#e.accounts,"Must only delete account macros")
     table.remove(e.accounts,i) deleted=deleted+1
   end
-  local clear=compile(bodies["{clear}"]:sub(6),e)
-  e.combat=true clear() assert(deleted==0 and #e.accounts==11)
-  e.combat=false clear()
-  assert(deleted==8 and #e.accounts==3 and not get(e,"{clear}"))
+  local uninstall=compile(bodies["~1.uninstall"]:sub(6),e)
+  e.combat=true uninstall() assert(deleted==0 and #e.accounts==11)
+  e.combat=false uninstall()
+  assert(deleted==8 and #e.accounts==3 and not get(e,"~1.uninstall"))
   assert(get(e,"fly")[2]==88 and get(e,"run")[2]==89 and get(e,"Other")[3]=="keep")
   assert(e.GetMacroInfo(121)=="{Character}")
-  clear() assert(deleted==8) -- Empty prefix set is harmless.
-  -- Simulate manually creating {import} after clearing, then the actual paste flow.
-  e.CreateMacro("{import}",134400,bodies["{import}"],false)
-  compile(bodies["{import}"]:sub(6),e)()
+  uninstall() assert(deleted==8) -- Empty prefix set is harmless.
+  -- Execute the chat /run payload after uninstalling, without creating a seed macro.
+  compile(read("generated/bootstrap.lua"):sub(6),e)()
   local bootstrap=e.frames[1]
   bootstrap:SetText(read("generated/install.lua"))
   bootstrap.scripts.OnEnterPressed(bootstrap)
   click(e,e.WoWMacrosImport.Input:GetText())
   for name,body in pairs(bodies) do assert(get(e,name)[3]==body,name) end
-  assert(#e.accounts==#manifest+1 and get(e,"Other")[3]=="keep")
-  assert(get(e,"{clear}")[2]==101 and get(e,"{import}")[2]==101)
+  assert(#e.accounts==#manifest+3 and get(e,"Other")[3]=="keep")
+  assert(get(e,"~1.uninstall")[2]==101 and not get(e,"~1.import"))
 end)
 
 test("pipe-free stored names are identical to display names",function()
@@ -259,18 +261,18 @@ test("pipe-free stored names are identical to display names",function()
     assert(macro[1]==name and #name<=16,name)
     assert(not name:find("|",1,true),name)
   end
-  assert(get(e,"[[accountbars1]]"))
-  assert(get(e,"{[run]}"))
-  assert(get(e,"[accountbars]"))
-  assert(get(e,"[way]"))
+  assert(get(e,"~3.c001.001"))
+  assert(get(e,"~2.load"))
+  assert(not get(e,"[accountbars]"))
+  assert(not get(e,"[way]"))
 end)
 
 test("imports use exact names without casing or legacy-name migrations",function()
   local e=environment({{"FLY",88,"old"},{"{|save|}",42,"old"}})
-  open(e) click(e,bundle({{"fly",bodies.fly},{"{[save]}",bodies["{[save]}"],"inv_misc_punchcards_white"}}))
+  open(e) click(e,bundle({{"fly","/fly"},{"~2.save",bodies["~2.save"],"inv_misc_punchcards_white"}}))
   assert(#e.accounts==4 and get(e,"FLY")[3]=="old")
-  assert(get(e,"{|save|}")[3]=="old" and get(e,"{[save]}"))
-  local writes=e.writes click(e,bundle({{"fly",bodies.fly}})) assert(e.writes==writes)
+  assert(get(e,"{|save|}")[3]=="old" and get(e,"~2.save"))
+  local writes=e.writes click(e,bundle({{"fly","/fly"}})) assert(e.writes==writes)
 end)
 
 test("invalid or unknown icons abort before edits",function()

@@ -1,6 +1,5 @@
 {
-  "macros/core/": "inv_misc_punchcards_red",
-  "macros/core/libs/": "inv_misc_punchcards_white",
-  "macros/cmds/": "inv_misc_punchcards_blue",
-  "macros/cmds/libs/": "inv_misc_punchcards_yellow"
+  "core": "inv_misc_punchcards_red",
+  "libs": "inv_misc_punchcards_white",
+  "chunks": "inv_misc_punchcards_yellow"
 }

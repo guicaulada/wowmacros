@@ -39,5 +39,5 @@ of combat. Select a named saved loadout before saving or restoring bars.
 
 The importer validates the complete bundle before writing. It preserves unrelated
 account macros and character macros, and does not rename or delete existing macros.
-Follow the [bootstrap guide](../../generated/BOOTSTRAP.md) for a fresh installation
-or [authoring instructions](../../README.md#writing-a-command) to add a command.
+Follow the [bootstrap guide](BOOTSTRAP.md) for a fresh installation
+or [authoring instructions](DEVELOPMENT.md#writing-a-command) to add a command.

@@ -12,12 +12,12 @@ and reinstalling. The new `~1.uninstall` only removes the new reserved prefixes.
 ```
 <!-- END GENERATED: bootstrap-chat -->
 
-2. Copy **all** of [install.lua](install.lua), paste it into the box, and press Enter.
+2. Copy **all** of [install.lua](../generated/install.lua), paste it into the box, and press Enter.
    This step executes the generated Lua installer from this repository.
 3. The importer window opens with the full bundle already filled in. Click **Import**.
 4. Click `~1.cmds` to register `/importmacros` and the other commands.
 
-For later updates, run `/importmacros`, paste all of [macros.txt](macros.txt), and
+For later updates, run `/importmacros`, paste all of [macros.txt](../generated/macros.txt), and
 click **Import**, then click `~1.cmds`. If importer code itself changed, `/reload`
 and click `~1.cmds` to use the new importer implementation.
 

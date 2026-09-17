@@ -138,21 +138,21 @@ def build():
         'assert(loadstring("return function(msg,wm) "..decode(' +
         lua(programs['src/cmds/importmacros.lua'].encode().hex()) + ').." end"))()("",wm)\n'
         'WoWMacrosImport.Input:SetText(' + literal(bundle) + ')\n')
-    outputs['generated/BOOTSTRAP.md'] = block((ROOT / 'generated/BOOTSTRAP.md').read_text(),
+    outputs['docs/BOOTSTRAP.md'] = block((ROOT / 'docs/BOOTSTRAP.md').read_text(),
         'bootstrap-chat', '```text\n' + outputs['generated/bootstrap.lua'] + '```')
-    outputs['generated/BOOTSTRAP.md'] = block(outputs['generated/BOOTSTRAP.md'],
+    outputs['docs/BOOTSTRAP.md'] = block(outputs['docs/BOOTSTRAP.md'],
         'uninstall-chat', '```text\n' + bodies['~1.uninstall'] + '\n```')
-    documentation = (ROOT / 'INSTALLATION.md').read_text()
+    documentation = (ROOT / 'docs/INSTALLATION.md').read_text()
     documentation = block(documentation, 'icons', '\n'.join(
         ['| Generated category | Managed icon |', '| --- | --- |'] +
         [f'| `{kind}` | `{icon}` |' for kind, icon in icons.items()]))
     rows = ['| In-game name | Bytes | Source |', '| --- | ---: | --- |']
     for name, source, kind, size in entries:
-        rows.append(f'| `{name}` | {size} | [{source}]({source}) |')
+        rows.append(f'| `{name}` | {size} | [{source}](../{source}) |')
     maximum = max(entry[3] for entry in entries)
     rows += ['', f'{len(entries)}/{CAPACITY} account slots; {len(programs)} source files. '
                   f'Every stored macro fits within {LIMIT} bytes (largest: {maximum}).']
-    outputs['INSTALLATION.md'] = block(documentation, 'inventory', '\n'.join(rows))
+    outputs['docs/INSTALLATION.md'] = block(documentation, 'inventory', '\n'.join(rows))
     return outputs, len(entries)
 
 

@@ -32,11 +32,11 @@ class ToolingTests(unittest.TestCase):
         return self.run_command(sys.executable, 'scripts/build.py', *args, success=success)
 
     def test_generated_blocks_preserve_handwritten_documentation(self):
-        for name in ('INSTALLATION.md', 'generated/BOOTSTRAP.md'):
+        for name in ('docs/INSTALLATION.md', 'docs/BOOTSTRAP.md'):
             path = self.repo / name
             path.write_text('Handwritten introduction.\n' + path.read_text() + '\nHandwritten ending.\n')
         self.generate()
-        for name in ('INSTALLATION.md', 'generated/BOOTSTRAP.md'):
+        for name in ('docs/INSTALLATION.md', 'docs/BOOTSTRAP.md'):
             text = (self.repo / name).read_text()
             self.assertTrue(text.startswith('Handwritten introduction.\n'))
             self.assertTrue(text.endswith('\nHandwritten ending.\n'))
@@ -49,7 +49,7 @@ class ToolingTests(unittest.TestCase):
         self.generate('--check')
 
     def test_invalid_markers_fail_before_writing_artifacts(self):
-        path = self.repo / 'INSTALLATION.md'
+        path = self.repo / 'docs/INSTALLATION.md'
         original = path.read_text()
         start = '<!-- BEGIN GENERATED: inventory -->'
         end = '<!-- END GENERATED: inventory -->'
@@ -67,14 +67,14 @@ class ToolingTests(unittest.TestCase):
         source = self.repo / 'src/cmds/fly.lua'
         source.write_bytes(source.read_bytes().replace(b'424', b'425'))
         bundle = (self.repo / 'generated/macros.txt').read_bytes()
-        docs = (self.repo / 'INSTALLATION.md').read_bytes()
+        docs = (self.repo / 'docs/INSTALLATION.md').read_bytes()
         self.generate('--check', success=False)
         self.assertEqual((self.repo / 'generated/macros.txt').read_bytes(), bundle)
-        self.assertEqual((self.repo / 'INSTALLATION.md').read_bytes(), docs)
+        self.assertEqual((self.repo / 'docs/INSTALLATION.md').read_bytes(), docs)
         self.generate()
         self.assertNotEqual((self.repo / 'generated/macros.txt').read_bytes(), bundle)
-        paths = ['generated/macros.txt', 'generated/install.lua', 'generated/BOOTSTRAP.md',
-                 'INSTALLATION.md', 'generated/manifest.lua']
+        paths = ['generated/macros.txt', 'generated/install.lua', 'docs/BOOTSTRAP.md',
+                 'docs/INSTALLATION.md', 'generated/manifest.lua']
         first = {p: (self.repo / p).read_bytes() for p in paths}
         self.generate()
         self.assertEqual(first, {p: (self.repo / p).read_bytes() for p in paths})

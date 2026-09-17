@@ -2,9 +2,11 @@
 
 1. Create a general/account macro named `{import}` and paste this entire line:
 
+<!-- BEGIN GENERATED: bootstrap-macro -->
 ```text
 /run local e=CreateFrame("EditBox",nil,UIParent,"InputBoxTemplate") e:SetSize(600,300)e:SetPoint("CENTER")e:SetMultiLine(true)e:SetMaxLetters(0)e:SetScript("OnEnterPressed",function(s)assert(loadstring(s:GetText()))()s:Hide()end)e:SetFocus()
 ```
+<!-- END GENERATED: bootstrap-macro -->
 
 2. Click `{import}` to open the paste box.
 3. Copy **all** of [install.lua](install.lua), paste it into the box, and press Enter.

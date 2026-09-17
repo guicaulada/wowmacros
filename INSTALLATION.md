@@ -14,17 +14,20 @@ Core names use `{name}`, shared libraries `{[name]}`, commands `[name]`,
 and command helpers `[[name]]`. No names contain pipes. No renames or migrations are performed.
 Byte counts include all newlines. Do not add `/run` to raw Lua libraries or command bodies.
 
+<!-- BEGIN GENERATED: icons -->
 | Directory | Managed icon |
 | --- | --- |
 | `macros/core/` | `inv_misc_punchcards_red` |
 | `macros/core/libs/` | `inv_misc_punchcards_white` |
 | `macros/cmds/` | `inv_misc_punchcards_blue` |
 | `macros/cmds/libs/` | `inv_misc_punchcards_yellow` |
+<!-- END GENERATED: icons -->
 
 The most specific directory wins. Existing icons in other directories are preserved;
 new macros in those directories use the question-mark icon. Imports update managed icons
 even when macro bodies have not changed. No macros are deleted by the importer.
 
+<!-- BEGIN GENERATED: inventory -->
 | In-game name | File | Bytes | Direct dependencies, in order |
 | --- | --- | ---: | --- |
 | `{clear}` | [macros/core/clear.lua](macros/core/clear.lua) | 232 | — |
@@ -87,6 +90,7 @@ even when macro bodies have not changed. No macros are deleted by the importer.
 | `[[im19]]` | [macros/cmds/libs/im19.lua](macros/cmds/libs/im19.lua) | 158 | — |
 
 All 58 files fit within 255 bytes; the largest is 254 bytes.
+<!-- END GENERATED: inventory -->
 
 The importer targets Retail WoW. Its version-2 bootstrap and import flow were
 reported working in-game; version-3 icon updates still need in-game verification.

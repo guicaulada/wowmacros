@@ -119,49 +119,47 @@ changing bars if an action type is unsupported or an action cannot be picked up.
 Restore macros before restoring bars that reference them. Both restores must run
 outside combat.
 
-## Validation
+## Development and validation
 
-Run from the repository root with LuaJIT or Lua 5.1:
-
-```sh
-python3 scripts/build-importer.py --check
-luajit tests/validate.lua
-luajit tests/importer.lua
-```
-
-The validator checks every macro's byte count (including directives and all
-newlines), exact names, manifest coverage, dependencies, expanded command syntax,
-engine registration, and mocked behavior for the fixed commands. It runs in CI.
-Add new files to [scripts/manifest.lua](scripts/manifest.lua), then regenerate the
-installation table and bundles. Keep individually stored files at or below 255 bytes; expanded command
-functions can be larger because they are compiled at runtime.
-
-To reset before importing, manually create a general macro named `{clear}` from
-[macros/core/clear.lua](macros/core/clear.lua) and run it outside combat. It deletes
-**every general macro whose name starts with `{`, `[`, or `|`**, including itself, core
-macros, commands, and libraries. Other general macros (such as `fly` and `run`) and
-all character macros are preserved. Run `/reload` to discard old command handlers,
-then manually create `{import}` from [macros/core/import.lua](macros/core/import.lua)
-and follow the [bootstrap guide](generated/BOOTSTRAP.md). The importer recreates
-`{clear}` with the red punchcard icon. This workflow requires no existing helpers.
-
-For this naming change, run `{clear}`, run `/reload`, manually recreate `{import}`,
-and paste the latest [install.lua](generated/install.lua). Click Import and then
-`{cmds}`. The bootstrap does not depend on any installed helper macros.
-
-After editing any macro or the icon policy, regenerate the paste bundles and
-installation table:
+Install Python 3, LuaJIT (or Lua 5.1), and Make. Enable the repository's commit hook
+once per clone:
 
 ```sh
-python3 scripts/build-importer.py
+make install-hooks
 ```
 
-Edit [src/importer.lua](src/importer.lua) to change the importer. The generator
-packs it into `[[im01]]` and subsequent helpers without exceeding 255 bytes per
-file, updates its manifest entries, and regenerates both paste bundles. Do not
-edit these generated helpers directly. The bootstrap includes the current full
-bundle; normal updates only need `generated/macros.txt`. If importer code itself
-changes, `/reload` and click `{cmds}` after importing to use the new implementation.
+Edit macros, `src/importer.lua`, `scripts/manifest.lua`, or `scripts/icons.json`, then:
+
+```sh
+make generate
+make check
+```
+
+`make generate` refreshes importer fragments, paste bundles, and the generated
+sections in `INSTALLATION.md` and `generated/BOOTSTRAP.md`. Only text between
+`<!-- BEGIN GENERATED: name -->` and `<!-- END GENERATED: name -->` is replaced;
+edit surrounding prose directly. Missing, duplicate, or reversed markers fail
+rather than overwriting the document. Edit `src/importer.lua` instead of its
+numbered helper fragments.
+
+`make check` verifies generated output is current, every macro fits within 255
+bytes, dependencies resolve, commands compile, and the Lua regression tests pass.
+It does not rewrite files. `make test-tooling` exercises documentation preservation,
+generator repeatability, and partial-staging behavior. CI runs both targets.
+For Lua 5.1 or a different Python executable, use `make LUA=lua PYTHON=python3 check`.
+
+The pre-commit hook exports **the staged snapshot** to a temporary directory and
+runs `make check` there. This catches stale bundles or documentation in the commit,
+even if the working tree already has newer output. The hook never rewrites or
+stages files: on failure, run `make generate`, review and stage the matching changes,
+then retry the commit. This keeps partially staged edits under your control.
+`make install-hooks` sets this clone's local `core.hooksPath` to `.githooks`; hooks
+are not enabled automatically in new clones. CI provides the same validation for
+commits made without the local hook.
+
+For a fresh in-game installation, run `{clear}`, `/reload`, manually recreate
+`{import}`, and paste the current [install.lua](generated/install.lua). Click Import
+and then `{cmds}`. Existing `fly` and `run` casing can be handled manually.
 
 This project targets Retail WoW. The version-2 import flow has been reported
 working in-game; version-3 icon updates still need in-game verification. The tests use mocked WoW APIs and do not prove protected-action,

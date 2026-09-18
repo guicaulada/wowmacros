@@ -6,13 +6,16 @@ local cache = {}
 local loading = {}
 
 -- Descriptors contain a chunk prefix, count, and optional first-chunk name.
--- Join without separators: a boundary can fall inside a token or string.
+-- Strip only whitespace outside the ! payload markers added by the compiler.
+-- WoW may append a newline when persisting macro text across game sessions.
+-- Join payloads without separators: boundaries can fall inside strings/tokens.
 local function read(parts)
     local chunks = {}
     for index = 1, parts[2] do
         local name = index == 1 and parts[3] or nil
         name = name or string.format("~3.%s.%03d", parts[1], index)
-        chunks[index] = assert(GetMacroBody(name), "Missing macro: " .. name)
+        local body = assert(GetMacroBody(name), "Missing macro: " .. name)
+        chunks[index] = assert(body:match("^%s*!(.*)!%s*$"), "Invalid chunk: " .. name)
     end
     return table.concat(chunks)
 end

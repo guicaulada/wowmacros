@@ -84,7 +84,7 @@ class ToolingTests(unittest.TestCase):
         library = self.repo / 'src/libs/zshared.lua'
         command = self.repo / 'src/cmds/zexample.lua'
         core = self.repo / 'src/core/zexample.lua'
-        library.write_text('return ' + repr('Olá | text ' * 80) + '\n')
+        library.write_text('return ' + repr('Olá ! | text ' * 80) + '\n')
         command.write_text('local text=wm.lib("zshared")\n' +
                            'local suffix=' + repr('x' * 600) + '\n' +
                            '_G.result=text .. msg .. suffix\n')
@@ -98,11 +98,14 @@ class ToolingTests(unittest.TestCase):
         check = self.repo / 'check-new.lua'
         check.write_text(r'''local bodies=dofile("tests/read-bundle.lua")
 for _,body in pairs(bodies) do assert(#body<=255) end
-GetMacroBody=function(name)return bodies[name]end
+GetMacroBody=function(name)
+  local body=bodies[name]
+  return body and body .. "\n"
+end
 SlashCmdList={}
 assert(loadstring(bodies["~1.cmds"]:sub(6)))()
 SlashCmdList.WOWMACROS_zexample("argument")
-assert(result==string.rep("Olá | text ",80).."argument"..string.rep("x",600))
+assert(result==string.rep("Olá ! | text ",80).."argument"..string.rep("x",600))
 assert(loadstring(bodies["~1.zexample"]:sub(6)))()
 assert(coreResult=="first\nsecond")
 ''')

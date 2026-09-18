@@ -66,11 +66,13 @@ def build():
         entries.append([name, source, kind, len(body.encode())])
 
     def pieces(kind, prefix, code, source, first=None):
-        chunks = split(code)
+        # Frame each payload and reserve a final newline for macro persistence.
+        # Never trim the Lua payload: boundaries can fall inside strings/tokens.
+        chunks = split(code, LIMIT - 3)
         for index, chunk in enumerate(chunks, 1):
             name = first if index == 1 and first else f'~3.{prefix}.{index:03}'
             directory = 'libs' if kind == 'libs' and index == 1 else 'chunks'
-            emit(name, chunk, source, directory)
+            emit(name, "!" + chunk + "!\n", source, directory)
         descriptor = [prefix, len(chunks)]
         if first:
             descriptor.append(first)
@@ -101,7 +103,8 @@ def build():
         if len(body.encode()) > LIMIT or '\n' in code or '\r' in code:
             prefix, count = pieces('core', f'k{index:03}', code, source)
             body = (f'/run local t={{}}for i=1,{count} do '
-                    f't[i]=assert(GetMacroBody(("~3.{prefix}.%03d"):format(i)),"Missing core chunk")'
+                    f'local b=GetMacroBody(("~3.{prefix}.%03d"):format(i))'
+                    't[i]=assert(b and b:match("^%s*!(.*)!%s*$"),"Missing or invalid core chunk")'
                     'end assert(loadstring(table.concat(t)))()')
         emit('~1.' + path.stem, body, source, 'core')
 

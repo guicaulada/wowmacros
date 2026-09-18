@@ -30,6 +30,15 @@ sections of `docs/BOOTSTRAP.md` and `docs/INSTALLATION.md`. Tests use the catalo
 you do not paste either file into the game.
 
 
+## Stored chunk format
+
+Each code chunk stores `!<payload>!` followed by a newline. The compiler budgets
+252 bytes for the payload plus the two markers and newline, keeping the whole
+macro within 255 bytes. Core and runtime loaders extract the marked payload before
+concatenating chunks. Whitespace outside the markers is ignored so an added line
+ending cannot break a string or token spanning two macros. Whitespace inside the
+markers is preserved exactly. Core entry macros still contain executable `/run` code.
+
 ## Writing a command
 
 Create `src/cmds/hello.lua` with ordinary Lua, without `/run`:

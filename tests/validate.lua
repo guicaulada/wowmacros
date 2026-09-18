@@ -28,7 +28,7 @@ for _, entry in ipairs(manifest) do
   if entry[3] == "chunks" or entry[3] == "libs" then
     local source = entry[2]
     parts[source] = parts[source] or {}
-    table.insert(parts[source], bodies[entry[1]])
+    table.insert(parts[source], assert(bodies[entry[1]]:match("^!(.*)!\n$")))
   elseif entry[3] == "core" then
     assert(loadstring(bodies[entry[1]]:sub(6), entry[1]))
   end
@@ -139,11 +139,44 @@ test("cmds lists all installed system commands once, sorted and space-separated"
   assert(#e.messages == 1 and e.messages[1][1] == table.concat(expected, " "))
 end)
 
+test("stored chunks tolerate trailing newlines after a game restart", function()
+  local e = environment()
+  e.GetMacroBody = function(name)
+    local body = storedBodies[name]
+    return body and "\r\n" .. body:gsub("\n$", "") .. "\r\n"
+  end
+  install(e)
+  command("cmds", e)
+  assert(#e.messages == 1)
+  assert(type(e.WoWMacros.lib("load")) == "function")
+  for name in pairs(catalog.libs) do
+    assert(type(e.WoWMacros.lib(name)) == "function", name)
+  end
+end)
+
+test("damaged chunk markers fail before execution", function()
+  local e = environment()
+  install(e)
+  e.GetMacroBody = function(name)
+    if name == "~2.load" then return 'return function() end' end
+    return storedBodies[name]
+  end
+  local ok, err = pcall(e.WoWMacros.lib, "load")
+  assert(not ok and err:find("Invalid chunk: ~2.load", 1, true))
+  e.GetMacroBody = function(name)
+    if name:match("^~3%.k") then return 'unframed' end
+    return storedBodies[name]
+  end
+  ok, err = pcall(install, e)
+  assert(not ok and err:find("Missing or invalid core chunk", 1, true))
+  assert(next(e.SlashCmdList) == nil)
+end)
+
 test("library failures do not poison the cache", function()
   local e = environment()
   install(e)
   e.GetMacroBody = function(name)
-    if name == "~2.load" then return 'return wm.lib("load")' end
+    if name == "~2.load" then return '!return wm.lib("load")!\n' end
     return storedBodies[name]
   end
   local ok, err = pcall(e.WoWMacros.lib, "load")

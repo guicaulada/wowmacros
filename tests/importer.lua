@@ -143,7 +143,7 @@ test("chat bootstrap starts with no macros; only clicking Import writes",functio
   assert(e.writes==#manifest)
   e.SlashCmdList={}
   compile(get(e,"~1.cmds")[3]:sub(6),e)()
-  assert(type(e.SlashCmdList.WOWMACROS_fly)=="function")
+  assert(e.SlashCmdList.WOWMACROS_fly==nil)
   assert(type(e.SlashCmdList.WOWMACROS_mount)=="function")
 end)
 

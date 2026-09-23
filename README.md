@@ -13,7 +13,7 @@ creation or access to WoW's filesystem is needed.
 
 Click `~1.cmds` after each login/reload. Run `/cmds` to list installed commands.
 For an action-bar shortcut, create your own macro containing a command such as
-`/fly` or `/mount`.
+`/mount`.
 
 ## Documentation
 

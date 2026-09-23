@@ -185,44 +185,108 @@ test("library failures do not poison the cache", function()
   assert(type(e.WoWMacros.lib("load")) == "function")
 end)
 
-test("mount selection terminates, preserves type filters and handles empty collections", function()
-  for _, name in ipairs({"mount", "fly"}) do
-    local e, collection, summoned = environment(), {}, nil
-    e.random = function(n) assert(n > 0); return n end
-    e.C_MountJournal = {
-      GetMountIDs = function() local t = {}; for i in ipairs(collection) do t[i] = i end; return t end,
-      GetMountInfoByID = function(id)
-        local m = collection[id]
-        return "Mount", nil, nil, m.active, false, nil, nil, nil, nil, nil, m.collected, id
-      end,
-      GetMountInfoExtraByID = function(id) return nil, nil, nil, nil, collection[id].kind end,
-      SummonByID = function(id) summoned = id end,
-    }
-    -- loadstring in WoW uses the shared global environment.
-    e.loadstring = function(s) return compile(s, e) end
-    install(e)
-    local run = function() command(name, e) end
-    local function boundedRun()
-      debug.sethook(function() error("Unbounded mount selection") end, "", 10000)
-      local ok, err = pcall(run)
-      debug.sethook()
-      assert(ok, err)
-    end
-    boundedRun()
-    assert(not summoned and #e.messages == 1)
-    collection = {{kind = 999, collected = true}, {kind = 230, collected = false}}
-    boundedRun()
-    assert(not summoned and #e.messages == 2)
-    collection = {{kind = 230, collected = true}, {kind = 424, collected = true},
-                  {kind = 248, collected = true}, {kind = 402, collected = true}}
-    boundedRun()
-    assert(summoned == (name == "mount" and 1 or 4))
-    if name == "mount" then
-      summoned, collection[1].active = nil, true
-      boundedRun()
-      assert(not summoned)
-    end
+local function mountEnvironment()
+  local e, state = environment(), {collection = {}, spells = {}, faction = "Alliance"}
+  e.random = function(n) assert(n > 0); state.poolSize = n; return state.pick or n end
+  e.IsSwimming = function() return state.swimming end
+  e.IsFlying = function() return state.airborne end
+  e.IsFlyableArea = function() return state.flyable end
+  e.IsAdvancedFlyableArea = function() return state.advanced end
+  e.IsPlayerSpell = function(id) return state.spells[id] end
+  e.UnitFactionGroup = function() return state.faction end
+  e.InCombatLockdown = function() return state.combat end
+  e.C_MountJournal = {
+    IsDragonridingUnlocked = function() return state.unlocked end,
+    GetMountIDs = function()
+      local ids = {}; for i in ipairs(state.collection) do ids[i] = i end; return ids
+    end,
+    GetMountInfoByID = function(id)
+      local m = state.collection[id]
+      if m.missing then return end
+      return "Mount", nil, nil, m.active, m.usable ~= false, nil, nil,
+        m.faction ~= nil, m.faction, m.hidden, m.collected ~= false, id, m.steady
+    end,
+    GetMountInfoExtraByID = function(id) return nil, nil, nil, nil, state.collection[id].kind end,
+    GetMountUsabilityByID = function(id, indoors)
+      assert(indoors); return state.collection[id].allowed ~= false
+    end,
+    SummonByID = function(id) state.summoned = id end,
+  }
+  install(e)
+  assert(not e.SlashCmdList.WOWMACROS_fly)
+  local function run(expected, poolSize)
+    state.summoned, state.poolSize = nil, nil
+    debug.sethook(function() error("Unbounded mount selection") end, "", 100000)
+    local ok, err = pcall(command, "mount", e)
+    debug.sethook()
+    assert(ok, err)
+    assert(state.summoned == expected, "Unexpected mount: " .. tostring(state.summoned))
+    if poolSize then assert(state.poolSize == poolSize) end
   end
+  return e, state, run
+end
+
+test("mount filters unusable, hidden, uncollected, active and wrong-faction mounts", function()
+  local e, s, run = mountEnvironment()
+  run(nil)
+  assert(e.messages[1][1] == "No usable mount.")
+  s.collection = {{kind = 230, collected = false}, {kind = 230, usable = false},
+    {kind = 230, active = true}, {kind = 230, hidden = true},
+    {kind = 230, allowed = false}, {kind = 230, missing = true}, {kind = 999}}
+  run(nil)
+  s.collection[#s.collection + 1] = {kind = 230, faction = 0}
+  s.collection[#s.collection + 1] = {kind = 230, faction = 1}
+  run(9, 1)
+  s.faction = "Horde"; run(8, 1)
+  s.faction = "Neutral"; run(nil)
+  s.collection[#s.collection + 1] = {kind = 284}; run(10, 1)
+end)
+
+test("mount refreshes flight eligibility, skill and mode without reloading libraries", function()
+  local _, s, run = mountEnvironment()
+  s.collection = {{kind = 230}, {kind = 424}, {kind = 248}, {kind = 407},
+    {kind = 402}, {kind = 436}, {kind = 437}, {kind = 444}, {kind = 445},
+    {kind = 424, steady = true}}
+  run(1, 1)
+  s.flyable = true; run(1, 1)
+  for _, spell in ipairs({34090, 34091, 54197, 90265}) do
+    s.spells = {[spell] = true}; run(10, 9)
+  end
+  s.advanced = true; run(1, 1)
+  s.unlocked = true; s.spells = {}; run(9, 6)
+  s.flyable = false; run(1, 1) -- advflyable must never bypass zone permission.
+  s.flyable = true; run(9, 6)
+  s.collection[9].active = true; run(8, 5)
+  s.collection[8].allowed = false; run(7, 4)
+end)
+
+test("mount prioritizes swimming and zone seahorse with flight and ground fallbacks", function()
+  local _, s, run = mountEnvironment()
+  s.collection = {{kind = 230}, {kind = 424}, {kind = 231}, {kind = 254},
+    {kind = 407}, {kind = 412}, {kind = 232, allowed = false}}
+  s.flyable, s.advanced, s.unlocked = true, true, true
+  run(2, 1)
+  s.swimming = true; run(6, 4)
+  for choice, id in ipairs({3, 4, 5, 6}) do s.pick = choice; run(id, 4) end
+  s.pick = nil
+  s.collection[7].allowed = true; run(7, 1)
+  for i = 3, 7 do s.collection[i].allowed = false end
+  run(2, 1)
+  s.flyable = false; run(1, 1)
+  s.collection[1].allowed = false; run(2, 1)
+  s.collection[2].allowed = false; run(nil)
+end)
+
+test("mount never selects aquatic-only mounts on land or summons in combat or midair", function()
+  local e, s, run = mountEnvironment()
+  s.collection = {{kind = 231}, {kind = 232}, {kind = 254}}
+  run(nil)
+  s.collection = {{kind = 230}, {kind = 230}, {kind = 241}, {kind = 412}}
+  for i = 1, 4 do s.pick = i; run(i, 4) end
+  s.combat = true; run(nil)
+  assert(e.messages[#e.messages][1] == "Unavailable in combat.")
+  s.combat = false; s.airborne = true; run(nil)
+  assert(e.messages[#e.messages][1] == "Land before changing mounts.")
 end)
 
 test("macro snapshots remove stale entries and repeated restores replace character macros only", function()

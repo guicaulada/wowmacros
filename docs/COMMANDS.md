@@ -12,8 +12,7 @@ Do not paste these source files directly into WoW.
 | `/cmds` | List all slash commands installed by this system, alphabetically and separated by spaces. |
 | `/clearquests` | Abandon non-campaign quests. |
 | `/fixres` | Apply automatic window sizing, intended for Windowed (Fullscreen). |
-| `/fly` | Summon a random collected mount matching the configured flying mount types. |
-| `/mount` | Summon a random collected ground mount, excluding the active mount. |
+| `/mount` | Summon a random usable mount suited to swimming, flight eligibility and mode, or ground travel; exclude the active mount. |
 | `/importmacros` | Open the bundle importer; update exact account names or create missing entries. |
 | `/loadbars` | Restore the selected saved loadout's action bars. |
 | `/loadloadouts` | Import saved talent strings for the current specialization through the talents UI. |
@@ -41,3 +40,19 @@ The importer validates the complete bundle before writing. It preserves unrelate
 account macros and character macros, and does not rename or delete existing macros.
 Follow the [bootstrap guide](BOOTSTRAP.md) for a fresh installation
 or [authoring instructions](DEVELOPMENT.md#writing-a-command) to add a command.
+
+`/mount` checks collection, character visibility, faction, and current journal
+usability (including indoors). It prefers aquatic mounts while swimming, then
+mounts matching the available flight mode and learned flying skill, then ground
+mounts. A usable flying mount can serve as a final ground fallback. In Vashj'ir,
+the zone seahorse takes priority while swimming if the journal reports it usable.
+Selection is random within the highest available group, excluding the active
+mount. Combat and already flying leave your current mount alone.
+
+Flight decisions use the client's zone and unlock APIs; unusual scenarios where
+those APIs misreport flight permission still need in-game validation. This does
+not automatically switch flight styles or cancel shapeshift forms.
+
+`/fly` has been replaced by `/mount`. Update your action-bar shortcut to `/mount`
+and use the fresh-reset installation procedure, including `/reload`, to clear
+old chunks and the previously registered `/fly` command.

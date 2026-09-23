@@ -64,8 +64,8 @@ class ToolingTests(unittest.TestCase):
         path.write_text(original)
 
     def test_stale_check_is_read_only_and_generation_is_repeatable(self):
-        source = self.repo / 'src/cmds/fly.lua'
-        source.write_bytes(source.read_bytes().replace(b'424', b'425'))
+        source = self.repo / 'src/libs/mount.lua'
+        source.write_bytes(b'local toolingProbe = true\n' + source.read_bytes())
         bundle = (self.repo / 'generated/macros.txt').read_bytes()
         docs = (self.repo / 'docs/INSTALLATION.md').read_bytes()
         self.generate('--check', success=False)
@@ -135,9 +135,9 @@ assert(coreResult=="first\nsecond")
     def test_hook_checks_index_and_never_stages_working_tree_changes(self):
         self.run_command('git', 'init', '-q')
         self.run_command('git', '-c', 'core.fsmonitor=false', 'add', '.')
-        source = self.repo / 'src/cmds/fly.lua'
-        source.write_bytes(source.read_bytes().replace(b'424', b'425'))
-        self.run_command('git', 'add', 'src/cmds/fly.lua')
+        source = self.repo / 'src/libs/mount.lua'
+        source.write_bytes(b'local toolingProbe = true\n' + source.read_bytes())
+        self.run_command('git', 'add', 'src/libs/mount.lua')
         self.generate()  # Working tree is fresh, but the staged artifacts are stale.
         tree = self.run_command('git', 'write-tree').stdout
         self.run_command('.githooks/pre-commit', success=False)

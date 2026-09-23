@@ -36,7 +36,7 @@ macros whose names start with `~1.`, `~2.`, or `~3.`**, including itself.
 It preserves other general macros (including `fly` and `run`) and all character
 macros. Run `/reload` to discard old registered commands, then start at step 1.
 No existing bootstrap or helper macro is required. This is a fresh installation,
-not a name migration; remove old `fly` and `run` manually and use `/fly` and `/mount` instead.
+not a name migration; remove old `fly` and `run` manually and use `/mount` instead.
 Optional clickable shortcuts can be created manually; use names without a system
 prefix so `~1.uninstall` preserves them.
 

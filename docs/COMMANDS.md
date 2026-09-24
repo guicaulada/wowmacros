@@ -47,7 +47,8 @@ mounts matching the available flight mode and learned flying skill, then ground
 mounts. A usable flying mount can serve as a final ground fallback. In Vashj'ir,
 the zone seahorse takes priority while swimming if the journal reports it usable.
 Selection is random within the highest available group, excluding the active
-mount. Combat and already flying leave your current mount alone.
+mount. Already flying leaves your current mount alone. The game handles combat restrictions;
+mount selection does not print chat messages.
 
 Flight decisions use the client's zone and unlock APIs; unusual scenarios where
 those APIs misreport flight permission still need in-game validation. This does

@@ -31,7 +31,7 @@ never deletes macros; the generator rebuilds the bundle from current sources.
 | `~3.l003.003` | 255 | [src/libs/mount.lua](../src/libs/mount.lua) |
 | `~3.l003.004` | 255 | [src/libs/mount.lua](../src/libs/mount.lua) |
 | `~3.l003.005` | 255 | [src/libs/mount.lua](../src/libs/mount.lua) |
-| `~3.l003.006` | 242 | [src/libs/mount.lua](../src/libs/mount.lua) |
+| `~3.l003.006` | 180 | [src/libs/mount.lua](../src/libs/mount.lua) |
 | `~2.outofcombat` | 109 | [src/libs/outofcombat.lua](../src/libs/outofcombat.lua) |
 | `~2.save` | 205 | [src/libs/save.lua](../src/libs/save.lua) |
 | `~3.c001.001` | 255 | [src/cmds/accountbars.lua](../src/cmds/accountbars.lua) |
@@ -73,7 +73,7 @@ never deletes macros; the generator rebuilds the bundle from current sources.
 | `~3.c010.004` | 138 | [src/cmds/loadmacros.lua](../src/cmds/loadmacros.lua) |
 | `~3.c011.001` | 255 | [src/cmds/macroicon.lua](../src/cmds/macroicon.lua) |
 | `~3.c011.002` | 56 | [src/cmds/macroicon.lua](../src/cmds/macroicon.lua) |
-| `~3.c012.001` | 66 | [src/cmds/mount.lua](../src/cmds/mount.lua) |
+| `~3.c012.001` | 20 | [src/cmds/mount.lua](../src/cmds/mount.lua) |
 | `~3.c013.001` | 255 | [src/cmds/savebars.lua](../src/cmds/savebars.lua) |
 | `~3.c013.002` | 73 | [src/cmds/savebars.lua](../src/cmds/savebars.lua) |
 | `~3.c014.001` | 135 | [src/cmds/saveloadout.lua](../src/cmds/saveloadout.lua) |

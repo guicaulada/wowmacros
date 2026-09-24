@@ -229,7 +229,7 @@ end
 test("mount filters unusable, hidden, uncollected, active and wrong-faction mounts", function()
   local e, s, run = mountEnvironment()
   run(nil)
-  assert(e.messages[1][1] == "No usable mount.")
+  assert(#e.messages == 0)
   s.collection = {{kind = 230, collected = false}, {kind = 230, usable = false},
     {kind = 230, active = true}, {kind = 230, hidden = true},
     {kind = 230, allowed = false}, {kind = 230, missing = true}, {kind = 999}}
@@ -277,16 +277,16 @@ test("mount prioritizes swimming and zone seahorse with flight and ground fallba
   s.collection[2].allowed = false; run(nil)
 end)
 
-test("mount never selects aquatic-only mounts on land or summons in combat or midair", function()
+test("mount excludes aquatic-only mounts on land, delegates combat, and stays quiet midair", function()
   local e, s, run = mountEnvironment()
   s.collection = {{kind = 231}, {kind = 232}, {kind = 254}}
   run(nil)
   s.collection = {{kind = 230}, {kind = 230}, {kind = 241}, {kind = 412}}
   for i = 1, 4 do s.pick = i; run(i, 4) end
-  s.combat = true; run(nil)
-  assert(e.messages[#e.messages][1] == "Unavailable in combat.")
+  e.InCombatLockdown = function() error("Mount must delegate combat restrictions") end
+  s.combat = true; run(4, 4)
   s.combat = false; s.airborne = true; run(nil)
-  assert(e.messages[#e.messages][1] == "Land before changing mounts.")
+  assert(#e.messages == 0)
 end)
 
 test("macro snapshots remove stale entries and repeated restores replace character macros only", function()

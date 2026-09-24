@@ -8,7 +8,7 @@ local aquatic = {[231] = true, [232] = true, [254] = true,
 local ground = {[230] = true, [241] = true, [284] = true, [412] = true}
 
 return function()
-    if IsFlying() then return print("Land before changing mounts.") end
+    if IsFlying() then return end
     local journal = C_MountJournal
     local swimming = IsSwimming()
     -- advflyable alone is not flight permission: also require a flyable area.
@@ -44,6 +44,6 @@ return function()
             if rank > 0 and rank == best then candidates[#candidates + 1] = id end
         end
     end
-    if #candidates == 0 then return print("No usable mount.") end
+    if #candidates == 0 then return end
     journal.SummonByID(candidates[random(#candidates)])
 end
